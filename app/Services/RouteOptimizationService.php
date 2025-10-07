@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Property;
+use App\Models\ServiceAppointment;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
@@ -94,5 +96,27 @@ class RouteOptimizationService
             'total_duration_seconds' => $route['duration'] ? (int) rtrim($route['duration'], 's') : 0,
             'legs' => $route['legs'] ?? [],
         ];
+    }
+
+    public function optimizeForDate(Carbon $date, ?string $startLocation = null): array
+    {
+        $appointments = ServiceAppointment::query()
+            ->readyForRouting()
+            ->forDate($date)
+            ->with(['property.customer', 'serviceType'])
+            ->get();
+
+        if ($appointments->isEmpty()) {
+            throw new Exception('No scheduled appointments found for this date with geocoded properties');
+        }
+
+        $properties = $appointments->pluck('property');
+
+        $result = $this->optimize($properties, $startLocation);
+
+        $result['appointments'] = $appointments;
+        $result['appointment_count'] = $appointments->count();
+
+        return $result;
     }
 }

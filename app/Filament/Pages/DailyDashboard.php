@@ -2,6 +2,11 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Widgets\AppointmentStatusChartWidget;
+use App\Filament\Widgets\DailyAppointmentsTable;
+use App\Filament\Widgets\DailyMetricsWidget;
+use App\Filament\Widgets\HourlyTimelineWidget;
+use App\Filament\Widgets\ServiceTypeDistributionWidget;
 use App\Models\ServiceAppointment;
 use App\Services\RouteOptimizationService;
 use Carbon\Carbon;
@@ -54,6 +59,7 @@ class DailyDashboard extends Page implements HasForms
                         $this->selectedDate = $state;
                         $this->loadAppointments();
                         $this->optimizedRoute = null;
+                        $this->dispatch('dateChanged', date: $state);
                     }),
             ])
             ->statePath('data');
@@ -137,6 +143,23 @@ class DailyDashboard extends Page implements HasForms
                 ->color('primary')
                 ->disabled(fn () => $this->appointments?->isEmpty() ?? true)
                 ->action('optimizeRoute'),
+        ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            DailyMetricsWidget::make(['selectedDate' => $this->selectedDate]),
+        ];
+    }
+
+    protected function getFooterWidgets(): array
+    {
+        return [
+            DailyAppointmentsTable::make(['selectedDate' => $this->selectedDate]),
+            AppointmentStatusChartWidget::make(['selectedDate' => $this->selectedDate]),
+            ServiceTypeDistributionWidget::make(['selectedDate' => $this->selectedDate]),
+            HourlyTimelineWidget::make(['selectedDate' => $this->selectedDate]),
         ];
     }
 

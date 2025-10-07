@@ -47,7 +47,7 @@ class ServiceSchedule extends Model
         return $this->belongsTo(ServiceType::class);
     }
 
-    public function serviceAppointments(): HasMany
+    public function appointments(): HasMany
     {
         return $this->hasMany(ServiceAppointment::class);
     }

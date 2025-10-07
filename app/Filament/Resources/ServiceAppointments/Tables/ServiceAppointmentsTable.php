@@ -17,38 +17,35 @@ class ServiceAppointmentsTable
     {
         return $table
             ->columns([
-                TextColumn::make('serviceSchedule.id')
-                    ->searchable(),
-                TextColumn::make('property.id')
-                    ->searchable(),
-                TextColumn::make('serviceType.name')
-                    ->searchable(),
                 TextColumn::make('scheduled_date')
                     ->date()
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('property.address')
+                    ->label('Property')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('property.customer.name')
+                    ->label('Customer')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('serviceType.name')
+                    ->label('Service')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('status')
+                    ->badge()
                     ->sortable(),
                 TextColumn::make('scheduled_time')
                     ->time()
-                    ->sortable(),
-                TextColumn::make('status')
-                    ->searchable(),
-                TextColumn::make('completed_at')
-                    ->dateTime()
-                    ->sortable(),
-                TextColumn::make('completed_by')
-                    ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(),
                 TextColumn::make('duration_minutes')
+                    ->label('Duration (min)')
                     ->numeric()
-                    ->sortable(),
-                TextColumn::make('created_at')
-                    ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('deleted_at')
+                    ->toggleable(),
+                TextColumn::make('completed_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

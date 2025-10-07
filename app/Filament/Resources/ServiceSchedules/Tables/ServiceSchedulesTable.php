@@ -18,38 +18,34 @@ class ServiceSchedulesTable
     {
         return $table
             ->columns([
-                TextColumn::make('property.id')
-                    ->searchable(),
+                TextColumn::make('property.address')
+                    ->label('Property')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('property.customer.name')
+                    ->label('Customer')
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('serviceType.name')
-                    ->searchable(),
+                    ->label('Service')
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('frequency')
-                    ->searchable(),
+                    ->badge()
+                    ->sortable(),
                 TextColumn::make('start_date')
                     ->date()
                     ->sortable(),
                 TextColumn::make('end_date')
                     ->date()
-                    ->sortable(),
-                TextColumn::make('day_of_week')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('week_of_month')
-                    ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->placeholder('Ongoing'),
                 IconColumn::make('is_active')
                     ->boolean(),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('appointments_count')
+                    ->counts('appointments')
+                    ->label('Appointments')
+                    ->sortable(),
             ])
             ->filters([
                 TrashedFilter::make(),

@@ -79,15 +79,17 @@
                                 <div class="flex-shrink-0">
                                     @if($appointment->property->latitude && $appointment->property->longitude && !$appointment->property->geocoding_failed)
                                         <div class="flex size-10 items-center justify-center rounded-full bg-success-100 dark:bg-success-900">
-                                            <svg class="size-5 text-success-600 dark:text-success-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                            </svg>
+                                            <x-filament::icon
+                                                icon="heroicon-o-check-circle"
+                                                class="size-5 text-success-600 dark:text-success-400"
+                                            />
                                         </div>
                                     @else
                                         <div class="flex size-10 items-center justify-center rounded-full bg-warning-100 dark:bg-warning-900">
-                                            <svg class="size-5 text-warning-600 dark:text-warning-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                                            </svg>
+                                            <x-filament::icon
+                                                icon="heroicon-o-exclamation-triangle"
+                                                class="size-5 text-warning-600 dark:text-warning-400"
+                                            />
                                         </div>
                                     @endif
                                 </div>
@@ -136,9 +138,10 @@
         @elseif($selectedDate)
             <x-filament::section>
                 <div class="py-12 text-center">
-                    <svg class="mx-auto size-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
+                    <x-filament::icon
+                        icon="heroicon-o-calendar"
+                        class="mx-auto size-12 text-gray-400"
+                    />
                     <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
                         No appointments scheduled
                     </h3>

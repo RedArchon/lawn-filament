@@ -6,9 +6,9 @@
                 Select Date
             </x-slot>
 
-            <x-filament::form wire:submit="loadAppointments">
+            <form wire:submit="loadAppointments">
                 {{ $this->form }}
-            </x-filament::form>
+            </form>
         </x-filament::section>
 
         @php

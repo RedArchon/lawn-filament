@@ -34,12 +34,14 @@ class PropertiesRelationManager extends RelationManager
                     ->schema([
                         TextInput::make('address')
                             ->required()
+                            ->minLength(5)
                             ->maxLength(255)
                             ->placeholder('123 Oak Street')
                             ->columnSpanFull(),
 
                         TextInput::make('city')
                             ->required()
+                            ->minLength(2)
                             ->maxLength(255)
                             ->placeholder('Springfield'),
 
@@ -51,6 +53,7 @@ class PropertiesRelationManager extends RelationManager
 
                         TextInput::make('zip')
                             ->required()
+                            ->regex('/^\d{5}(-\d{4})?$/')
                             ->maxLength(255)
                             ->placeholder('12345')
                             ->mask('99999'),
@@ -61,10 +64,13 @@ class PropertiesRelationManager extends RelationManager
                     ->schema([
                         TextInput::make('lot_size')
                             ->maxLength(255)
+                            ->nullable()
                             ->placeholder('0.25 acres'),
 
                         Textarea::make('access_instructions')
                             ->rows(3)
+                            ->maxLength(1000)
+                            ->nullable()
                             ->placeholder('Gate code, parking instructions, etc.')
                             ->columnSpanFull(),
 

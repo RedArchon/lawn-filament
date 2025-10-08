@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -49,6 +50,16 @@ class Property extends Model
     public function notes(): MorphMany
     {
         return $this->morphMany(Note::class, 'notable');
+    }
+
+    public function serviceSchedules(): HasMany
+    {
+        return $this->hasMany(ServiceSchedule::class);
+    }
+
+    public function serviceAppointments(): HasMany
+    {
+        return $this->hasMany(ServiceAppointment::class);
     }
 
     public function fullAddress(): Attribute

@@ -24,6 +24,11 @@ class ServiceAppointmentForm
                 Select::make('service_type_id')
                     ->relationship('serviceType', 'name')
                     ->required(),
+                Select::make('team_id')
+                    ->relationship('team', 'name')
+                    ->label('Assigned Team')
+                    ->searchable()
+                    ->preload(),
                 DatePicker::make('scheduled_date')
                     ->required(),
                 TimePicker::make('scheduled_time'),

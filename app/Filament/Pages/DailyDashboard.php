@@ -9,6 +9,7 @@ use App\Filament\Widgets\HourlyTimelineWidget;
 use App\Filament\Widgets\ServiceTypeDistributionWidget;
 use App\Models\ServiceAppointment;
 use App\Services\RouteOptimizationService;
+use App\Services\TeamAssignmentService;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
@@ -134,12 +135,110 @@ class DailyDashboard extends Page implements HasForms
         }
     }
 
+    public function autoAssignTeams(): void
+    {
+        if (! $this->selectedDate) {
+            Notification::make()
+                ->danger()
+                ->title('Validation Error')
+                ->body('Please select a date.')
+                ->send();
+
+            return;
+        }
+
+        $unassignedCount = ServiceAppointment::query()
+            ->forDate(Carbon::parse($this->selectedDate))
+            ->unassigned()
+            ->where('status', 'scheduled')
+            ->count();
+
+        if ($unassignedCount === 0) {
+            Notification::make()
+                ->warning()
+                ->title('No Unassigned Appointments')
+                ->body('There are no unassigned appointments for this date.')
+                ->send();
+
+            return;
+        }
+
+        try {
+            $service = app(TeamAssignmentService::class);
+            $result = $service->autoAssignAppointments(Carbon::parse($this->selectedDate));
+
+            $this->loadAppointments();
+
+            Notification::make()
+                ->success()
+                ->title('Teams Auto-Assigned!')
+                ->body("Assigned {$result['total_assigned']} of {$result['total_unassigned']} appointments to {$result['teams_used']} team(s).")
+                ->send();
+        } catch (\Exception $e) {
+            Notification::make()
+                ->danger()
+                ->title('Auto-Assignment Failed')
+                ->body($e->getMessage())
+                ->send();
+        }
+    }
+
+    public function optimizeAllTeams(): void
+    {
+        if (! $this->selectedDate) {
+            Notification::make()
+                ->danger()
+                ->title('Validation Error')
+                ->body('Please select a date.')
+                ->send();
+
+            return;
+        }
+
+        try {
+            $service = app(RouteOptimizationService::class);
+            $result = $service->optimizeAllTeamsForDate(Carbon::parse($this->selectedDate));
+
+            $this->loadAppointments();
+
+            $message = "Optimized {$result['teams_optimized']} team(s) with {$result['total_appointments']} total appointments.";
+
+            if (! empty($result['errors'])) {
+                $message .= ' Some teams had errors.';
+            }
+
+            Notification::make()
+                ->success()
+                ->title('All Teams Optimized!')
+                ->body($message)
+                ->send();
+        } catch (\Exception $e) {
+            Notification::make()
+                ->danger()
+                ->title('Optimization Failed')
+                ->body($e->getMessage())
+                ->send();
+        }
+    }
+
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('optimizeRoute')
-                ->label('Optimize Route')
+            Action::make('autoAssignTeams')
+                ->label('Auto-Assign Teams')
+                ->icon('heroicon-o-user-group')
+                ->color('success')
+                ->disabled(fn () => $this->appointments?->isEmpty() ?? true)
+                ->action('autoAssignTeams'),
+            Action::make('optimizeAllTeams')
+                ->label('Optimize All Teams')
                 ->icon('heroicon-o-map')
+                ->color('info')
+                ->disabled(fn () => $this->appointments?->isEmpty() ?? true)
+                ->action('optimizeAllTeams'),
+            Action::make('optimizeRoute')
+                ->label('Optimize Route (All)')
+                ->icon('heroicon-o-map-pin')
                 ->color('primary')
                 ->disabled(fn () => $this->appointments?->isEmpty() ?? true)
                 ->action('optimizeRoute'),

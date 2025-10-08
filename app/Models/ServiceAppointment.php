@@ -17,6 +17,8 @@ class ServiceAppointment extends Model
         'service_schedule_id',
         'property_id',
         'service_type_id',
+        'team_id',
+        'route_order',
         'scheduled_date',
         'scheduled_time',
         'status',
@@ -56,6 +58,11 @@ class ServiceAppointment extends Model
         return $this->belongsTo(User::class, 'completed_by');
     }
 
+    public function team(): BelongsTo
+    {
+        return $this->belongsTo(Team::class);
+    }
+
     public function scopeScheduled(Builder $query): void
     {
         $query->where('status', 'scheduled');
@@ -74,6 +81,16 @@ class ServiceAppointment extends Model
                     ->whereNotNull('longitude')
                     ->where('geocoding_failed', false);
             });
+    }
+
+    public function scopeAssignedToTeam(Builder $query, int $teamId): void
+    {
+        $query->where('team_id', $teamId);
+    }
+
+    public function scopeUnassigned(Builder $query): void
+    {
+        $query->whereNull('team_id');
     }
 
     public function markCompleted(User $user): void

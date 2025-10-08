@@ -119,4 +119,79 @@ class RouteOptimizationService
 
         return $result;
     }
+
+    public function optimizeForTeam($team, Carbon $date, ?string $startLocation = null): array
+    {
+        $teamId = is_object($team) ? $team->id : $team;
+
+        $appointments = ServiceAppointment::query()
+            ->readyForRouting()
+            ->assignedToTeam($teamId)
+            ->forDate($date)
+            ->with(['property.customer', 'serviceType', 'team'])
+            ->get();
+
+        if ($appointments->isEmpty()) {
+            throw new Exception('No scheduled appointments found for this team and date with geocoded properties');
+        }
+
+        $properties = $appointments->pluck('property');
+
+        $result = $this->optimize($properties, $startLocation);
+
+        // Update route order for appointments
+        foreach ($result['optimized_order'] as $index => $property) {
+            $appointment = $appointments->firstWhere('property_id', $property->id);
+            if ($appointment) {
+                $appointment->update(['route_order' => $index + 1]);
+            }
+        }
+
+        $result['appointments'] = $appointments->sortBy('route_order');
+        $result['appointment_count'] = $appointments->count();
+        $result['team_id'] = $teamId;
+
+        return $result;
+    }
+
+    public function optimizeAllTeamsForDate(Carbon $date, ?string $startLocation = null): array
+    {
+        $teams = \App\Models\Team::active()
+            ->whereHas('appointments', function ($query) use ($date) {
+                $query->whereDate('scheduled_date', $date)
+                    ->readyForRouting();
+            })
+            ->get();
+
+        if ($teams->isEmpty()) {
+            throw new Exception('No teams with appointments found for this date');
+        }
+
+        $results = [];
+        $totalOptimized = 0;
+        $errors = [];
+
+        foreach ($teams as $team) {
+            try {
+                $result = $this->optimizeForTeam($team, $date, $startLocation);
+                $results[] = [
+                    'team' => $team,
+                    'result' => $result,
+                ];
+                $totalOptimized += $result['appointment_count'];
+            } catch (Exception $e) {
+                $errors[] = [
+                    'team' => $team->name,
+                    'error' => $e->getMessage(),
+                ];
+            }
+        }
+
+        return [
+            'teams_optimized' => count($results),
+            'total_appointments' => $totalOptimized,
+            'results' => $results,
+            'errors' => $errors,
+        ];
+    }
 }

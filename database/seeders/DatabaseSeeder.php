@@ -14,11 +14,15 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Create admin user for Filament
-        User::factory()->create([
+        $admin = User::factory()->create([
             'name' => 'Admin User',
             'email' => 'admin@example.com',
             'password' => bcrypt('password'),
         ]);
+
+        // Create additional users for team assignments
+        $users = User::factory()->count(8)->create();
+        $users->push($admin);
 
         // Create 20 customers
         $customers = \App\Models\Customer::factory(20)->create();
@@ -84,6 +88,86 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
                 'notes' => fake()->optional(0.3)->sentence(),
             ]);
+        }
+
+        // Create teams
+        $teams = collect([
+            ['name' => 'Alpha Crew', 'color' => '#10b981', 'max_daily_appointments' => 15],
+            ['name' => 'Bravo Team', 'color' => '#3b82f6', 'max_daily_appointments' => 12],
+            ['name' => 'Charlie Squad', 'color' => '#f59e0b', 'max_daily_appointments' => 10],
+            ['name' => 'Delta Crew', 'color' => '#ef4444', 'max_daily_appointments' => 18],
+        ])->map(function ($teamData) {
+            return \App\Models\Team::create([
+                'name' => $teamData['name'],
+                'color' => $teamData['color'],
+                'is_active' => true,
+                'max_daily_appointments' => $teamData['max_daily_appointments'],
+                'start_time' => '08:00:00',
+            ]);
+        });
+
+        // Assign users to teams (2-3 users per team)
+        $teams->each(function ($team) use ($users) {
+            $teamUsers = $users->random(fake()->numberBetween(2, 3));
+            $team->users()->attach($teamUsers->pluck('id'));
+        });
+
+        // Create service appointments for the next 7 days
+        $tomorrow = now()->addDay();
+        $createdCombinations = collect();
+
+        foreach (range(0, 6) as $dayOffset) {
+            $date = $tomorrow->copy()->addDays($dayOffset);
+            $appointmentCount = fake()->numberBetween(15, 30);
+            $attempts = 0;
+            $maxAttempts = $appointmentCount * 3;
+
+            for ($i = 0; $i < $appointmentCount && $attempts < $maxAttempts; $attempts++) {
+                $property = $properties->random();
+                $serviceType = $createdServiceTypes->random();
+
+                // Check if this combination already exists
+                $key = "{$property->id}-{$date->toDateString()}-{$serviceType->id}";
+                if ($createdCombinations->contains($key)) {
+                    continue;
+                }
+
+                $createdCombinations->push($key);
+
+                // 70% of appointments get assigned to a team, 30% remain unassigned
+                $team = fake()->boolean(70) ? $teams->random() : null;
+
+                // For tomorrow's date, add some variety in statuses for demo purposes
+                $status = 'scheduled';
+                $completedAt = null;
+                $completedBy = null;
+                
+                if ($dayOffset === 0 && $team) {
+                    // 20% completed, 10% in progress, 70% scheduled
+                    $rand = fake()->numberBetween(1, 100);
+                    if ($rand <= 20) {
+                        $status = 'completed';
+                        $completedAt = $date->copy()->addHours(fake()->numberBetween(1, 8));
+                        $completedBy = $users->random()->id;
+                    } elseif ($rand <= 30) {
+                        $status = 'in_progress';
+                    }
+                }
+
+                \App\Models\ServiceAppointment::create([
+                    'property_id' => $property->id,
+                    'service_type_id' => $serviceType->id,
+                    'team_id' => $team?->id,
+                    'scheduled_date' => $date,
+                    'scheduled_time' => fake()->time('H:i:s', '16:00:00'),
+                    'status' => $status,
+                    'completed_at' => $completedAt,
+                    'completed_by' => $completedBy,
+                    'duration_minutes' => $serviceType->default_duration_minutes,
+                ]);
+
+                $i++;
+            }
         }
     }
 }

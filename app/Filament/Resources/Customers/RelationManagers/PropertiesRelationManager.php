@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Customers\RelationManagers;
 
+use App\Enums\State;
+use App\Filament\Resources\Properties\PropertyResource;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -22,6 +24,8 @@ class PropertiesRelationManager extends RelationManager
 {
     protected static string $relationship = 'properties';
 
+    protected static ?string $relatedResource = PropertyResource::class;
+
     public function form(Schema $schema): Schema
     {
         return $schema
@@ -40,21 +44,7 @@ class PropertiesRelationManager extends RelationManager
                             ->placeholder('Springfield'),
 
                         Select::make('state')
-                            ->options([
-                                'AL' => 'Alabama', 'AK' => 'Alaska', 'AZ' => 'Arizona', 'AR' => 'Arkansas',
-                                'CA' => 'California', 'CO' => 'Colorado', 'CT' => 'Connecticut', 'DE' => 'Delaware',
-                                'FL' => 'Florida', 'GA' => 'Georgia', 'HI' => 'Hawaii', 'ID' => 'Idaho',
-                                'IL' => 'Illinois', 'IN' => 'Indiana', 'IA' => 'Iowa', 'KS' => 'Kansas',
-                                'KY' => 'Kentucky', 'LA' => 'Louisiana', 'ME' => 'Maine', 'MD' => 'Maryland',
-                                'MA' => 'Massachusetts', 'MI' => 'Michigan', 'MN' => 'Minnesota', 'MS' => 'Mississippi',
-                                'MO' => 'Missouri', 'MT' => 'Montana', 'NE' => 'Nebraska', 'NV' => 'Nevada',
-                                'NH' => 'New Hampshire', 'NJ' => 'New Jersey', 'NM' => 'New Mexico', 'NY' => 'New York',
-                                'NC' => 'North Carolina', 'ND' => 'North Dakota', 'OH' => 'Ohio', 'OK' => 'Oklahoma',
-                                'OR' => 'Oregon', 'PA' => 'Pennsylvania', 'RI' => 'Rhode Island', 'SC' => 'South Carolina',
-                                'SD' => 'South Dakota', 'TN' => 'Tennessee', 'TX' => 'Texas', 'UT' => 'Utah',
-                                'VT' => 'Vermont', 'VA' => 'Virginia', 'WA' => 'Washington', 'WV' => 'West Virginia',
-                                'WI' => 'Wisconsin', 'WY' => 'Wyoming',
-                            ])
+                            ->options(State::options())
                             ->required()
                             ->searchable()
                             ->placeholder('Select state'),

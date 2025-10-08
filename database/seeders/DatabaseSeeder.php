@@ -141,7 +141,7 @@ class DatabaseSeeder extends Seeder
                 $status = 'scheduled';
                 $completedAt = null;
                 $completedBy = null;
-                
+
                 if ($dayOffset === 0 && $team) {
                     // 20% completed, 10% in progress, 70% scheduled
                     $rand = fake()->numberBetween(1, 100);

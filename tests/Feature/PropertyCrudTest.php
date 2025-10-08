@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature;
+
 use App\Filament\Resources\Properties\Pages\CreateProperty;
 use App\Filament\Resources\Properties\Pages\EditProperty;
 use App\Filament\Resources\Properties\Pages\ListProperties;
@@ -9,166 +11,179 @@ use App\Models\Property;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
+use Livewire\Livewire;
+use Tests\TestCase;
 
-use function Pest\Laravel\assertDatabaseHas;
-use function Pest\Laravel\assertDatabaseMissing;
-use function Pest\Livewire\livewire;
+class PropertyCrudTest extends TestCase
+{
+    use RefreshDatabase;
 
-uses(RefreshDatabase::class);
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->actingAs(User::factory()->create());
+        Queue::fake();
+    }
 
-beforeEach(function () {
-    $this->actingAs(User::factory()->create());
-    Queue::fake();
-});
+    public function test_can_render_property_list_page(): void
+    {
+        Livewire::test(ListProperties::class)
+            ->assertOk();
+    }
 
-it('can render property list page', function () {
-    livewire(ListProperties::class)
-        ->assertOk();
-});
+    public function test_can_list_properties(): void
+    {
+        $properties = Property::factory()->count(10)->create();
 
-it('can list properties', function () {
-    $properties = Property::factory()->count(10)->create();
+        Livewire::test(ListProperties::class)
+            ->assertCanSeeTableRecords($properties);
+    }
 
-    livewire(ListProperties::class)
-        ->assertCanSeeTableRecords($properties);
-});
+    public function test_can_render_property_create_page(): void
+    {
+        Livewire::test(CreateProperty::class)
+            ->assertOk();
+    }
 
-it('can render property create page', function () {
-    livewire(CreateProperty::class)
-        ->assertOk();
-});
+    public function test_can_create_a_property(): void
+    {
+        $customer = Customer::factory()->create();
+        $newPropertyData = Property::factory()->make();
 
-it('can create a property', function () {
-    $customer = Customer::factory()->create();
-    $newPropertyData = Property::factory()->make();
+        Livewire::test(CreateProperty::class)
+            ->fillForm([
+                'customer_id' => $customer->id,
+                'address' => $newPropertyData->address,
+                'city' => $newPropertyData->city,
+                'state' => $newPropertyData->state,
+                'zip' => $newPropertyData->zip,
+                'service_status' => 'active',
+            ])
+            ->call('create')
+            ->assertNotified();
 
-    livewire(CreateProperty::class)
-        ->fillForm([
+        $this->assertDatabaseHas(Property::class, [
             'customer_id' => $customer->id,
             'address' => $newPropertyData->address,
             'city' => $newPropertyData->city,
-            'state' => $newPropertyData->state,
-            'zip' => $newPropertyData->zip,
-            'service_status' => 'active',
-        ])
-        ->call('create')
-        ->assertNotified();
-
-    assertDatabaseHas(Property::class, [
-        'customer_id' => $customer->id,
-        'address' => $newPropertyData->address,
-        'city' => $newPropertyData->city,
-    ]);
-
-    Queue::assertPushed(GeocodePropertyJob::class);
-});
-
-it('validates required fields when creating a property', function () {
-    livewire(CreateProperty::class)
-        ->fillForm([
-            'address' => null,
-            'city' => null,
-        ])
-        ->call('create')
-        ->assertHasFormErrors([
-            'customer_id' => 'required',
-            'address' => 'required',
-            'city' => 'required',
-        ])
-        ->assertNotNotified();
-});
-
-it('can render property edit page', function () {
-    $property = Property::factory()->create();
-
-    livewire(EditProperty::class, [
-        'record' => $property->id,
-    ])
-        ->assertOk()
-        ->assertSchemaStateSet([
-            'address' => $property->address,
-            'city' => $property->city,
         ]);
-});
+    }
 
-it('can update a property', function () {
-    $property = Property::factory()->create();
-    $newPropertyData = Property::factory()->make();
+    public function test_validates_required_fields_when_creating_a_property(): void
+    {
+        Livewire::test(CreateProperty::class)
+            ->fillForm([
+                'address' => null,
+                'city' => null,
+            ])
+            ->call('create')
+            ->assertHasFormErrors([
+                'customer_id' => 'required',
+                'address' => 'required',
+                'city' => 'required',
+            ])
+            ->assertNotNotified();
+    }
 
-    livewire(EditProperty::class, [
-        'record' => $property->id,
-    ])
-        ->fillForm([
+    public function test_can_render_property_edit_page(): void
+    {
+        $property = Property::factory()->create();
+
+        Livewire::test(EditProperty::class, [
+            'record' => $property->id,
+        ])
+            ->assertOk()
+            ->assertSchemaStateSet([
+                'address' => $property->address,
+                'city' => $property->city,
+            ]);
+    }
+
+    public function test_can_update_a_property(): void
+    {
+        $property = Property::factory()->create();
+        $newPropertyData = Property::factory()->make();
+
+        Livewire::test(EditProperty::class, [
+            'record' => $property->id,
+        ])
+            ->fillForm([
+                'address' => $newPropertyData->address,
+                'city' => $newPropertyData->city,
+                'state' => $newPropertyData->state,
+                'zip' => $newPropertyData->zip,
+            ])
+            ->call('save')
+            ->assertNotified();
+
+        $this->assertDatabaseHas(Property::class, [
+            'id' => $property->id,
             'address' => $newPropertyData->address,
             'city' => $newPropertyData->city,
-            'state' => $newPropertyData->state,
-            'zip' => $newPropertyData->zip,
+        ]);
+    }
+
+    public function test_can_delete_a_property(): void
+    {
+        $property = Property::factory()->create();
+
+        Livewire::test(EditProperty::class, [
+            'record' => $property->id,
         ])
-        ->call('save')
-        ->assertNotified();
+            ->callAction('delete')
+            ->assertNotified();
 
-    assertDatabaseHas(Property::class, [
-        'id' => $property->id,
-        'address' => $newPropertyData->address,
-        'city' => $newPropertyData->city,
-    ]);
-});
+        $this->assertDatabaseMissing(Property::class, [
+            'id' => $property->id,
+            'deleted_at' => null,
+        ]);
+    }
 
-it('can delete a property', function () {
-    $property = Property::factory()->create();
+    public function test_can_filter_properties_by_service_status(): void
+    {
+        Property::factory()->count(5)->create(['service_status' => 'active']);
+        $inactiveProperties = Property::factory()->count(3)->create(['service_status' => 'inactive']);
 
-    livewire(EditProperty::class, [
-        'record' => $property->id,
-    ])
-        ->callAction('delete')
-        ->assertNotified();
+        Livewire::test(ListProperties::class)
+            ->filterTable('service_status', 'inactive')
+            ->assertCanSeeTableRecords($inactiveProperties)
+            ->assertCountTableRecords(3);
+    }
 
-    assertDatabaseMissing(Property::class, [
-        'id' => $property->id,
-        'deleted_at' => null,
-    ]);
-});
+    public function test_can_filter_properties_by_customer(): void
+    {
+        $customer = Customer::factory()->create();
+        $customerProperties = Property::factory()->count(3)->create(['customer_id' => $customer->id]);
+        Property::factory()->count(5)->create();
 
-it('can filter properties by service status', function () {
-    Property::factory()->count(5)->create(['service_status' => 'active']);
-    $inactiveProperties = Property::factory()->count(3)->create(['service_status' => 'inactive']);
+        Livewire::test(ListProperties::class)
+            ->filterTable('customer_id', $customer->id)
+            ->assertCanSeeTableRecords($customerProperties)
+            ->assertCountTableRecords(3);
+    }
 
-    livewire(ListProperties::class)
-        ->filterTable('service_status', 'inactive')
-        ->assertCanSeeTableRecords($inactiveProperties)
-        ->assertCountTableRecords(3);
-});
+    public function test_can_search_properties_by_address(): void
+    {
+        $properties = Property::factory()->count(5)->create();
+        $targetProperty = $properties->first();
 
-it('can filter properties by customer', function () {
-    $customer = Customer::factory()->create();
-    $customerProperties = Property::factory()->count(3)->create(['customer_id' => $customer->id]);
-    Property::factory()->count(5)->create();
+        Livewire::test(ListProperties::class)
+            ->searchTable($targetProperty->address)
+            ->assertCanSeeTableRecords([$targetProperty]);
+    }
 
-    livewire(ListProperties::class)
-        ->filterTable('customer_id', $customer->id)
-        ->assertCanSeeTableRecords($customerProperties)
-        ->assertCountTableRecords(3);
-});
+    public function test_dispatches_geocoding_job_when_address_changes(): void
+    {
+        $property = Property::factory()->create();
 
-it('can search properties by address', function () {
-    $properties = Property::factory()->count(5)->create();
-    $targetProperty = $properties->first();
-
-    livewire(ListProperties::class)
-        ->searchTable($targetProperty->address)
-        ->assertCanSeeTableRecords([$targetProperty]);
-});
-
-it('dispatches geocoding job when address changes', function () {
-    $property = Property::factory()->create();
-
-    livewire(EditProperty::class, [
-        'record' => $property->id,
-    ])
-        ->fillForm([
-            'address' => '456 New Street',
+        Livewire::test(EditProperty::class, [
+            'record' => $property->id,
         ])
-        ->call('save');
+            ->fillForm([
+                'address' => '456 New Street',
+            ])
+            ->call('save');
 
-    Queue::assertPushed(GeocodePropertyJob::class);
-});
+        Queue::assertPushed(GeocodePropertyJob::class);
+    }
+}

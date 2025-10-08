@@ -39,6 +39,29 @@ class CustomersTable
                     ->toggleable()
                     ->placeholder('N/A'),
 
+                TextColumn::make('billing_city')
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->placeholder('N/A'),
+
+                TextColumn::make('billing_state')
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->placeholder('N/A'),
+
+                TextColumn::make('billing_address')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->placeholder('N/A')
+                    ->limit(40),
+
+                TextColumn::make('billing_zip')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->placeholder('N/A'),
+
                 TextColumn::make('properties_count')
                     ->counts('properties')
                     ->label('Properties')

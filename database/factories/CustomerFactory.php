@@ -22,12 +22,12 @@ class CustomerFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'phone' => fake()->phoneNumber(),
+            'phone' => fake()->numerify('+1 (###) ###-####'),
             'company_name' => $hasCompany ? fake()->company() : null,
             'billing_address' => $hasBillingAddress ? fake()->streetAddress() : null,
             'billing_city' => $hasBillingAddress ? fake()->city() : null,
             'billing_state' => $hasBillingAddress ? fake()->stateAbbr() : null,
-            'billing_zip' => $hasBillingAddress ? fake()->postcode() : null,
+            'billing_zip' => $hasBillingAddress ? fake()->numerify('#####') : null,
             'status' => fake()->randomElement(['active', 'inactive']),
         ];
     }

@@ -53,12 +53,14 @@ class PropertyForm
                     ->schema([
                         TextInput::make('address')
                             ->required()
+                            ->minLength(5)
                             ->maxLength(255)
                             ->placeholder('123 Oak Street')
                             ->columnSpanFull(),
 
                         TextInput::make('city')
                             ->required()
+                            ->minLength(2)
                             ->maxLength(255)
                             ->placeholder('Springfield'),
 
@@ -70,6 +72,7 @@ class PropertyForm
 
                         TextInput::make('zip')
                             ->required()
+                            ->regex('/^\d{5}(-\d{4})?$/')
                             ->maxLength(255)
                             ->placeholder('12345')
                             ->mask('99999'),
@@ -82,11 +85,14 @@ class PropertyForm
                     ->schema([
                         TextInput::make('lot_size')
                             ->maxLength(255)
+                            ->nullable()
                             ->placeholder('0.25 acres')
                             ->helperText('e.g., "0.5 acres" or "5000 sq ft"'),
 
                         Textarea::make('access_instructions')
                             ->rows(3)
+                            ->maxLength(1000)
+                            ->nullable()
                             ->placeholder('Gate code, parking instructions, etc.')
                             ->helperText('Special instructions for accessing the property')
                             ->columnSpanFull(),

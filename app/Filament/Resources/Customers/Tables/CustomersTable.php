@@ -7,6 +7,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
@@ -16,7 +17,21 @@ class CustomersTable
     {
         return $table
             ->columns([
-                //
+                TextColumn::make('name')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('email')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('phone')
+                    ->searchable(),
+                TextColumn::make('properties_count')
+                    ->counts('properties')
+                    ->label('Properties')
+                    ->sortable(),
+                TextColumn::make('status')
+                    ->badge()
+                    ->sortable(),
             ])
             ->filters([
                 TrashedFilter::make(),

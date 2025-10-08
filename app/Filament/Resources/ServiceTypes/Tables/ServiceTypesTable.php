@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Properties\Tables;
+namespace App\Filament\Resources\ServiceTypes\Tables;
 
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -12,31 +12,34 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
-class PropertiesTable
+class ServiceTypesTable
 {
     public static function configure(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('address')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('city')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('state')
+                TextColumn::make('name')
                     ->searchable(),
-                TextColumn::make('customer.name')
-                    ->label('Customer')
-                    ->searchable()
+                TextColumn::make('default_duration_minutes')
+                    ->numeric()
                     ->sortable(),
-                IconColumn::make('geocoded')
-                    ->label('Geocoded')
-                    ->boolean()
-                    ->getStateUsing(fn ($record) => $record->latitude && $record->longitude && ! $record->geocoding_failed),
-                TextColumn::make('service_status')
-                    ->badge()
+                TextColumn::make('default_price')
+                    ->numeric()
                     ->sortable(),
+                IconColumn::make('is_active')
+                    ->boolean(),
+                TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('deleted_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 TrashedFilter::make(),

@@ -41,7 +41,7 @@ class CustomerForm
                             ->helperText('Primary contact phone number'),
                     ])
                     ->columns(3)
-                    ->collapsible(condition: false),
+                    ->collapsible(false),
 
                 Section::make('Additional Information')
                     ->schema([
@@ -63,8 +63,7 @@ class CustomerForm
                             ->helperText('Customer account status'),
                     ])
                     ->columns(3)
-                    ->collapsible()
-                    ->collapsed(condition:false),
+                    ->collapsible(false),
 
                 Section::make('Billing Address')
                     ->schema([
@@ -106,7 +105,7 @@ class CustomerForm
                             ->dehydrated(false),
                     ])
                     ->columns(3)
-                    ->collapsible(condition: false),
+                    ->collapsible(false),
             ]);
     }
 }

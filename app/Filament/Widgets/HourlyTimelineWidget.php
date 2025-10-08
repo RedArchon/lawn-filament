@@ -52,8 +52,8 @@ class HourlyTimelineWidget extends ChartWidget
 
         // Count appointments by scheduled hour
         foreach ($appointments as $appointment) {
-            if ($appointment->scheduled_at) {
-                $hour = Carbon::parse($appointment->scheduled_at)->hour;
+            if ($appointment->scheduled_time) {
+                $hour = Carbon::parse($appointment->scheduled_time)->hour;
                 if ($hour >= 6 && $hour <= 20) {
                     $hourlyCounts[$hour]++;
                 }

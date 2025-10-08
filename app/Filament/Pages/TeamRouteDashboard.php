@@ -56,8 +56,6 @@ class TeamRouteDashboard extends Page implements HasTable
                 'completed_by' => auth()->id(),
             ]);
 
-            $this->loadAppointments();
-
             Notification::make()
                 ->success()
                 ->title('Appointment Completed')
@@ -203,8 +201,6 @@ class TeamRouteDashboard extends Page implements HasTable
                                 'completed_by' => auth()->id(),
                             ]);
 
-                            $this->loadAppointments();
-
                             Notification::make()
                                 ->success()
                                 ->title('Appointment Completed')
@@ -252,8 +248,6 @@ class TeamRouteDashboard extends Page implements HasTable
                                 'completed_by' => auth()->id(),
                             ]));
 
-                            $this->loadAppointments();
-
                             Notification::make()
                                 ->success()
                                 ->title('Appointments Completed')
@@ -275,8 +269,6 @@ class TeamRouteDashboard extends Page implements HasTable
                         ->accessSelectedRecords()
                         ->action(function (Collection $records, array $data) {
                             $records->each->update(['team_id' => $data['team_id']]);
-
-                            $this->loadAppointments();
 
                             Notification::make()
                                 ->success()

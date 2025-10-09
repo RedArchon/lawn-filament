@@ -14,14 +14,23 @@ class GeocodePropertyJob implements ShouldQueue
 {
     use Queueable;
 
+    /**
+     * The number of times the job may be attempted.
+     */
     public int $tries = 3;
 
+    /**
+     * The number of seconds to wait before retrying the job.
+     */
     public int $backoff = 60;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(public Property $property) {}
+    public function __construct(public Property $property)
+    {
+        $this->onQueue('geocoding');
+    }
 
     /**
      * Get the middleware the job should pass through.

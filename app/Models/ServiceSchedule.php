@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\SchedulingType;
+use App\Enums\ServiceFrequency;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,6 +20,7 @@ class ServiceSchedule extends Model
     protected $fillable = [
         'property_id',
         'service_type_id',
+        'scheduling_type',
         'frequency',
         'start_date',
         'end_date',
@@ -30,6 +33,7 @@ class ServiceSchedule extends Model
     protected function casts(): array
     {
         return [
+            'scheduling_type' => SchedulingType::class,
             'frequency' => 'string',
             'start_date' => 'date',
             'end_date' => 'date',
@@ -52,6 +56,11 @@ class ServiceSchedule extends Model
         return $this->hasMany(ServiceAppointment::class);
     }
 
+    public function seasonalPeriods(): HasMany
+    {
+        return $this->hasMany(SeasonalFrequencyPeriod::class)->orderBy('start_month')->orderBy('start_day');
+    }
+
     public function scopeActive(Builder $query): void
     {
         $query->where('is_active', true);
@@ -70,6 +79,42 @@ class ServiceSchedule extends Model
     }
 
     public function generateAppointments(Carbon $startDate, Carbon $endDate): Collection
+    {
+        return match ($this->scheduling_type) {
+            SchedulingType::Manual => $this->generateManualAppointment($startDate, $endDate),
+            SchedulingType::Recurring => $this->generateRecurringAppointments($startDate, $endDate),
+            SchedulingType::Seasonal => $this->generateSeasonalAppointments($startDate, $endDate),
+        };
+    }
+
+    protected function generateManualAppointment(Carbon $startDate, Carbon $endDate): Collection
+    {
+        $appointments = collect();
+
+        if ($this->start_date->between($startDate, $endDate)) {
+            $existing = ServiceAppointment::query()
+                ->where('property_id', $this->property_id)
+                ->where('service_type_id', $this->service_type_id)
+                ->whereDate('scheduled_date', $this->start_date)
+                ->exists();
+
+            if (! $existing) {
+                $appointment = ServiceAppointment::create([
+                    'service_schedule_id' => $this->id,
+                    'property_id' => $this->property_id,
+                    'service_type_id' => $this->service_type_id,
+                    'scheduled_date' => $this->start_date,
+                    'status' => 'scheduled',
+                ]);
+
+                $appointments->push($appointment);
+            }
+        }
+
+        return $appointments;
+    }
+
+    protected function generateRecurringAppointments(Carbon $startDate, Carbon $endDate): Collection
     {
         $appointments = collect();
         $current = $this->start_date->copy();
@@ -108,6 +153,56 @@ class ServiceSchedule extends Model
             }
 
             $current = $this->advanceCurrentDate($current);
+        }
+
+        return $appointments;
+    }
+
+    protected function generateSeasonalAppointments(Carbon $startDate, Carbon $endDate): Collection
+    {
+        $appointments = collect();
+        $current = $this->start_date->copy();
+
+        if ($current->lt($startDate)) {
+            $current = $startDate->copy();
+        }
+
+        while ($current->lte($endDate)) {
+            if ($this->end_date && $current->gt($this->end_date)) {
+                break;
+            }
+
+            // Get the seasonal period for current date
+            $period = $this->getCurrentSeasonalPeriod($current);
+
+            if (! $period) {
+                // No period found, advance by 1 day
+                $current = $current->copy()->addDay();
+
+                continue;
+            }
+
+            // Check if appointment already exists
+            $existing = ServiceAppointment::query()
+                ->where('property_id', $this->property_id)
+                ->where('service_type_id', $this->service_type_id)
+                ->whereDate('scheduled_date', $current)
+                ->exists();
+
+            if (! $existing) {
+                $appointment = ServiceAppointment::create([
+                    'service_schedule_id' => $this->id,
+                    'property_id' => $this->property_id,
+                    'service_type_id' => $this->service_type_id,
+                    'scheduled_date' => $current,
+                    'status' => 'scheduled',
+                ]);
+
+                $appointments->push($appointment);
+            }
+
+            // Advance by the frequency of the current period
+            $current = $current->copy()->addDays($period->frequency->getDays());
         }
 
         return $appointments;
@@ -167,5 +262,22 @@ class ServiceSchedule extends Model
             'quarterly' => $date->copy()->addMonths(3),
             default => $date->copy()->addDay(),
         };
+    }
+
+    public function getCurrentSeasonalPeriod(Carbon $date): ?SeasonalFrequencyPeriod
+    {
+        return $this->seasonalPeriods
+            ->first(fn (SeasonalFrequencyPeriod $period) => $period->containsDate($date));
+    }
+
+    public function getFrequencyForDate(Carbon $date): ?ServiceFrequency
+    {
+        if ($this->scheduling_type === SchedulingType::Seasonal) {
+            $period = $this->getCurrentSeasonalPeriod($date);
+
+            return $period?->frequency;
+        }
+
+        return null;
     }
 }

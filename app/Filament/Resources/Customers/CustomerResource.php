@@ -7,6 +7,7 @@ use App\Filament\Resources\Customers\Pages\EditCustomer;
 use App\Filament\Resources\Customers\Pages\ListCustomers;
 use App\Filament\Resources\Customers\RelationManagers\NotesRelationManager;
 use App\Filament\Resources\Customers\RelationManagers\PropertiesRelationManager;
+use App\Filament\Resources\Customers\RelationManagers\ServiceSchedulesRelationManager;
 use App\Filament\Resources\Customers\Schemas\CustomerForm;
 use App\Filament\Resources\Customers\Tables\CustomersTable;
 use App\Models\Customer;
@@ -43,6 +44,7 @@ class CustomerResource extends Resource
     {
         return [
             PropertiesRelationManager::class,
+            ServiceSchedulesRelationManager::class,
             NotesRelationManager::class,
         ];
     }

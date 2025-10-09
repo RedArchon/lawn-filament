@@ -73,20 +73,46 @@ class DatabaseSeeder extends Seeder
             ]));
         }
 
-        // Create 40 service schedules for random properties
-        foreach (range(1, 40) as $i) {
-            $frequency = fake()->randomElement(['weekly', 'biweekly', 'monthly']);
+        // Get the Mowing service type for seasonal examples
+        $mowingService = $createdServiceTypes->firstWhere('name', 'Mowing');
 
-            \App\Models\ServiceSchedule::create([
+        // Create seasonal schedules (Brooksville, FL lawn mowing)
+        foreach (range(1, 10) as $i) {
+            $schedule = \App\Models\ServiceSchedule::factory()->seasonal()->create([
+                'property_id' => $properties->random()->id,
+                'service_type_id' => $mowingService->id,
+                'start_date' => now()->subMonth(),
+                'end_date' => null, // Ongoing
+                'is_active' => true,
+                'notes' => 'Brooksville, FL seasonal lawn mowing schedule',
+            ]);
+
+            // Add the 4 seasonal periods for Brooksville
+            foreach (\Database\Factories\SeasonalFrequencyPeriodFactory::brooksvilleLawnCarePeriods() as $periodData) {
+                \App\Models\SeasonalFrequencyPeriod::create(array_merge(
+                    ['service_schedule_id' => $schedule->id],
+                    $periodData
+                ));
+            }
+        }
+
+        // Create recurring schedules (simple recurring)
+        foreach (range(1, 20) as $i) {
+            \App\Models\ServiceSchedule::factory()->recurring()->create([
                 'property_id' => $properties->random()->id,
                 'service_type_id' => $createdServiceTypes->random()->id,
-                'frequency' => $frequency,
-                'start_date' => fake()->dateTimeBetween('-1 month', 'now'),
-                'end_date' => fake()->boolean(20) ? fake()->dateTimeBetween('+3 months', '+6 months') : null,
-                'day_of_week' => in_array($frequency, ['weekly', 'biweekly']) ? fake()->numberBetween(1, 5) : null,
-                'week_of_month' => $frequency === 'monthly' ? fake()->numberBetween(1, 4) : null,
                 'is_active' => true,
-                'notes' => fake()->optional(0.3)->sentence(),
+            ]);
+        }
+
+        // Create manual/one-off schedules
+        foreach (range(1, 10) as $i) {
+            \App\Models\ServiceSchedule::factory()->manual()->create([
+                'property_id' => $properties->random()->id,
+                'service_type_id' => $createdServiceTypes->random()->id,
+                'start_date' => fake()->dateTimeBetween('now', '+1 month'),
+                'is_active' => true,
+                'notes' => 'One-time service',
             ]);
         }
 

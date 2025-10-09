@@ -26,7 +26,7 @@ class AppointmentGeneratorService
     {
         $schedules = ServiceSchedule::query()
             ->dueForGeneration()
-            ->with(['property', 'serviceType'])
+            ->with(['property', 'serviceType', 'seasonalPeriods'])
             ->get();
 
         $totalGenerated = 0;

@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Properties\RelationManagers;
 
+use App\Enums\DayOfWeek;
+use App\Enums\WeekOfMonth;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -10,7 +12,6 @@ use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
@@ -51,17 +52,15 @@ class ServiceSchedulesRelationManager extends RelationManager
                     ->helperText('Optional: When to stop generating appointments')
                     ->after('start_date'),
 
-                TextInput::make('day_of_week')
-                    ->numeric()
-                    ->minValue(0)
-                    ->maxValue(6)
-                    ->helperText('0 = Sunday, 6 = Saturday'),
+                Select::make('day_of_week')
+                    ->label('Day of Week')
+                    ->options(DayOfWeek::options())
+                    ->helperText('Which day of the week for the service'),
 
-                TextInput::make('week_of_month')
-                    ->numeric()
-                    ->minValue(1)
-                    ->maxValue(4)
-                    ->helperText('For monthly frequency'),
+                Select::make('week_of_month')
+                    ->label('Week of Month')
+                    ->options(WeekOfMonth::options())
+                    ->helperText('For monthly frequency - which week of the month'),
 
                 Toggle::make('is_active')
                     ->default(true)

@@ -66,11 +66,11 @@ class SeasonalFrequencyPeriod extends Model
             return false;
         }
 
-        if ($month == $startMonth && $day < $startDay) {
+        if ($month === $startMonth && $day < $startDay) {
             return false;
         }
 
-        if ($month == $endMonth && $day > $endDay) {
+        if ($month === $endMonth && $day > $endDay) {
             return false;
         }
 

@@ -108,7 +108,7 @@ class CustomerForm
                             ->dehydrated(false)
                             ->live()
                             ->afterStateUpdated(function ($state, $set, $get) {
-                                if (! $state || ! $get('billing_address') || ! $get('billing_city') || ! $get('billing_state') || ! $get('billing_zip')) {
+                                if (! $get('billing_address') || ! $get('billing_city') || ! $get('billing_state') || ! $get('billing_zip')) {
                                     return;
                                 }
 
@@ -149,41 +149,6 @@ class CustomerForm
                     ->collapsible()
                     ->collapsed(),
             ]);
-    }
-
-    private function prePopulatePropertiesRepeater(callable $get, callable $set): void
-    {
-        $billingAddress = $get('billing_address');
-        $billingCity = $get('billing_city');
-        $billingState = $get('billing_state');
-        $billingZip = $get('billing_zip');
-
-        // Check if this billing address is already in the properties
-        $existingProperties = $get('properties') ?? [];
-        foreach ($existingProperties as $property) {
-            if (
-                ($property['address'] ?? null) === $billingAddress &&
-                ($property['city'] ?? null) === $billingCity &&
-                ($property['state'] ?? null) === $billingState &&
-                ($property['zip'] ?? null) === $billingZip
-            ) {
-                return; // Already exists, don't add duplicate
-            }
-        }
-
-        // Add the billing address as a new property
-        $newProperty = [
-            'address' => $billingAddress,
-            'city' => $billingCity,
-            'state' => $billingState,
-            'zip' => $billingZip,
-            'service_status' => 'active',
-            'lot_size' => null,
-            'access_instructions' => null,
-        ];
-
-        $updatedProperties = array_merge($existingProperties, [$newProperty]);
-        $set('properties', $updatedProperties);
     }
 
     public static function getPropertiesRepeaterField(): Repeater

@@ -13,6 +13,16 @@ class SeasonalSchedulingTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function createSeasonalPeriodsFromFactory(ServiceSchedule $schedule, array $periods): void
+    {
+        foreach ($periods as $periodData) {
+            SeasonalFrequencyPeriod::create(array_merge(
+                ['service_schedule_id' => $schedule->id],
+                $periodData
+            ));
+        }
+    }
+
     public function test_manual_schedule_generates_single_appointment(): void
     {
         $schedule = ServiceSchedule::factory()->manual()->create([
@@ -187,12 +197,10 @@ class SeasonalSchedulingTest extends TestCase
         ]);
 
         // Add the 4 seasonal periods for Brooksville
-        foreach (\Database\Factories\SeasonalFrequencyPeriodFactory::brooksvilleLawnCarePeriods() as $periodData) {
-            SeasonalFrequencyPeriod::create(array_merge(
-                ['service_schedule_id' => $schedule->id],
-                $periodData
-            ));
-        }
+        $this->createSeasonalPeriodsFromFactory(
+            $schedule,
+            \Database\Factories\SeasonalFrequencyPeriodFactory::brooksvilleLawnCarePeriods()
+        );
 
         // Reload the schedule to get the periods
         $schedule->load('seasonalPeriods');
@@ -277,12 +285,10 @@ class SeasonalSchedulingTest extends TestCase
         ]);
 
         // Add the 4 seasonal periods for Brooksville
-        foreach (\Database\Factories\SeasonalFrequencyPeriodFactory::brooksvilleLawnCarePeriods() as $periodData) {
-            SeasonalFrequencyPeriod::create(array_merge(
-                ['service_schedule_id' => $schedule->id],
-                $periodData
-            ));
-        }
+        $this->createSeasonalPeriodsFromFactory(
+            $schedule,
+            \Database\Factories\SeasonalFrequencyPeriodFactory::brooksvilleLawnCarePeriods()
+        );
 
         $appointments = $schedule->generateAppointments(now(), now()->addDays(90));
 

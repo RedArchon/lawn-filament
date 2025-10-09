@@ -4,7 +4,9 @@ namespace App\Filament\Resources\Customers\Schemas;
 
 use App\Enums\State;
 use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -152,5 +154,78 @@ class CustomerForm
             ->visible(true)
             ->columnSpanFull()
             ->dehydrated(false);
+    }
+
+    public static function getPropertiesRepeaterField(): Repeater
+    {
+        return Repeater::make('properties')
+            ->label('Properties')
+            ->schema([
+                Section::make()
+                    ->schema([
+                        TextInput::make('address')
+                            ->label('Address')
+                            ->required()
+                            ->minLength(5)
+                            ->maxLength(255)
+                            ->placeholder('123 Oak Street')
+                            ->columnSpanFull(),
+
+                        TextInput::make('city')
+                            ->label('City')
+                            ->required()
+                            ->minLength(2)
+                            ->maxLength(255)
+                            ->placeholder('Springfield'),
+
+                        Select::make('state')
+                            ->label('State')
+                            ->options(State::options())
+                            ->required()
+                            ->searchable()
+                            ->placeholder('Select state'),
+
+                        TextInput::make('zip')
+                            ->label('ZIP Code')
+                            ->required()
+                            ->regex('/^\d{5}(-\d{4})?$/')
+                            ->maxLength(255)
+                            ->placeholder('12345')
+                            ->mask('99999'),
+
+                        TextInput::make('lot_size')
+                            ->label('Lot Size')
+                            ->maxLength(255)
+                            ->nullable()
+                            ->placeholder('0.25 acres')
+                            ->helperText('e.g., "0.5 acres" or "5000 sq ft"'),
+
+                        Select::make('service_status')
+                            ->label('Service Status')
+                            ->options([
+                                'active' => 'Active',
+                                'inactive' => 'Inactive',
+                                'seasonal' => 'Seasonal',
+                            ])
+                            ->default('active')
+                            ->required()
+                            ->helperText('Current service status for this property'),
+
+                        Textarea::make('access_instructions')
+                            ->label('Access Instructions')
+                            ->rows(3)
+                            ->maxLength(1000)
+                            ->nullable()
+                            ->placeholder('Gate code, parking instructions, etc.')
+                            ->helperText('Special instructions for accessing the property')
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(3),
+            ])
+            ->addActionLabel('Add Property')
+            ->defaultItems(0)
+            ->collapsible()
+            ->itemLabel(fn (array $state): ?string => $state['address'] ?? null)
+            ->helperText('Add properties for this customer. If you checked "Use billing address for service" in the previous step, that property will be pre-populated here.');
     }
 }

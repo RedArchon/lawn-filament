@@ -7,7 +7,6 @@ use App\Filament\Resources\Customers\Schemas\CustomerForm;
 use App\Models\Customer;
 use App\Models\Property;
 use Filament\Resources\Pages\CreateRecord;
-use Filament\Schemas\Components\View;
 use Filament\Schemas\Components\Wizard\Step;
 use Filament\Support\Icons\Heroicon;
 
@@ -62,11 +61,35 @@ class CreateCustomer extends CreateRecord
                 ->description('Manage customer properties and locations')
                 ->icon(Heroicon::Home)
                 ->schema([
-                    View::make('wizard.properties-step')
-                        ->viewData([
-                            'customer' => $this->record ?? null,
-                        ]),
-                ]),
+                    CustomerForm::getPropertiesRepeaterField(),
+                ])
+                ->beforeValidation(function () {
+                    // Pre-populate properties repeater with billing address if service_billing_address is checked
+                    $data = $this->form->getState();
+
+                    if (($data['service_billing_address'] ?? false) &&
+                        $data['billing_address'] &&
+                        $data['billing_city'] &&
+                        $data['billing_state'] &&
+                        $data['billing_zip']) {
+
+                        // Check if properties repeater is empty
+                        $properties = $data['properties'] ?? [];
+
+                        if (empty($properties)) {
+                            // Pre-populate with billing address
+                            $this->form->set('properties', [[
+                                'address' => $data['billing_address'],
+                                'city' => $data['billing_city'],
+                                'state' => $data['billing_state'],
+                                'zip' => $data['billing_zip'],
+                                'service_status' => 'active',
+                                'lot_size' => null,
+                                'access_instructions' => null,
+                            ]]);
+                        }
+                    }
+                }),
         ];
     }
 
@@ -74,31 +97,36 @@ class CreateCustomer extends CreateRecord
     {
         $data = $this->form->getRawState();
 
-        if (($data['service_billing_address'] ?? false) &&
-            $data['billing_address'] &&
-            $data['billing_city'] &&
-            $data['billing_state'] &&
-            $data['billing_zip']) {
-
-            Property::create([
-                'customer_id' => $this->record->id,
-                'address' => $data['billing_address'],
-                'city' => $data['billing_city'],
-                'state' => $data['billing_state'],
-                'zip' => $data['billing_zip'],
-                'service_status' => 'active',
-            ]);
+        // Create properties from the repeater
+        if (isset($data['properties']) && is_array($data['properties'])) {
+            foreach ($data['properties'] as $propertyData) {
+                if (! empty($propertyData['address'])) {
+                    Property::create([
+                        'customer_id' => $this->record->id,
+                        'address' => $propertyData['address'],
+                        'city' => $propertyData['city'],
+                        'state' => $propertyData['state'],
+                        'zip' => $propertyData['zip'],
+                        'service_status' => $propertyData['service_status'] ?? 'active',
+                        'lot_size' => $propertyData['lot_size'] ?? null,
+                        'access_instructions' => $propertyData['access_instructions'] ?? null,
+                    ]);
+                }
+            }
         }
     }
 
-    protected function mutateFormDataBeforeCreate(array $data): array
+    public function create(bool $another = false): void
     {
-        // If record already exists (created in billing step), don't create again
+        // If record already exists (created in billing step), skip creation
         if ($this->record) {
-            return [];
+            // Just call afterCreate to handle properties
+            $this->afterCreate();
+
+            return;
         }
 
-        return $data;
+        parent::create($another);
     }
 
     protected function getRedirectUrl(): string

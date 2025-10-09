@@ -6,6 +6,7 @@ use App\Filament\Resources\Customers\CustomerResource;
 use App\Filament\Resources\Customers\Schemas\CustomerForm;
 use App\Models\Property;
 use Filament\Resources\Pages\CreateRecord;
+use Filament\Schemas\Components\View;
 use Filament\Schemas\Components\Wizard\Step;
 use Filament\Support\Icons\Heroicon;
 
@@ -47,7 +48,23 @@ class CreateCustomer extends CreateRecord
                     CustomerForm::getBillingZipFormField(),
                     CustomerForm::getServiceBillingAddressFormField(),
                 ])
-                ->columns(3),
+                ->columns(3)
+                ->afterValidation(function () {
+                    // Save the customer after billing address step so it's available for properties step
+                    if (! $this->record) {
+                        $this->save();
+                    }
+                }),
+
+            Step::make('Properties')
+                ->description('Manage customer properties and locations')
+                ->icon(Heroicon::Home)
+                ->schema([
+                    View::make('wizard.properties-step')
+                        ->viewData([
+                            'customer' => $this->record ?? null,
+                        ]),
+                ]),
         ];
     }
 
@@ -70,5 +87,20 @@ class CreateCustomer extends CreateRecord
                 'service_status' => 'active',
             ]);
         }
+    }
+
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        // If record already exists (created in billing step), don't create again
+        if ($this->record) {
+            return [];
+        }
+
+        return $data;
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('edit', ['record' => $this->record]);
     }
 }

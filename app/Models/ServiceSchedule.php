@@ -80,6 +80,10 @@ class ServiceSchedule extends Model
 
     public function generateAppointments(Carbon $startDate, Carbon $endDate): Collection
     {
+        if (! $this->is_active) {
+            return collect();
+        }
+
         return match ($this->scheduling_type) {
             SchedulingType::Manual => $this->generateManualAppointment($startDate, $endDate),
             SchedulingType::Recurring => $this->generateRecurringAppointments($startDate, $endDate),

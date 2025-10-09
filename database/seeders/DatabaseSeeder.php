@@ -88,9 +88,12 @@ class DatabaseSeeder extends Seeder
             ]);
 
             // Add the 4 seasonal periods for Brooksville
-            \App\Models\SeasonalFrequencyPeriod::factory()
-                ->brooksvilleLawnCare()
-                ->create(['service_schedule_id' => $schedule->id]);
+            foreach (\Database\Factories\SeasonalFrequencyPeriodFactory::brooksvilleLawnCarePeriods() as $periodData) {
+                \App\Models\SeasonalFrequencyPeriod::create(array_merge(
+                    ['service_schedule_id' => $schedule->id],
+                    $periodData
+                ));
+            }
         }
 
         // Create recurring schedules (simple recurring)

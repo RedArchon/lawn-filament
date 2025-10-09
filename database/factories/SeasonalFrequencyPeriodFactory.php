@@ -31,10 +31,11 @@ class SeasonalFrequencyPeriodFactory extends Factory
 
     /**
      * Brooksville, FL Lawn Mowing Periods
+     * Returns array of period definitions to create
      */
-    public function brooksvilleLawnCare(): static
+    public static function brooksvilleLawnCarePeriods(): array
     {
-        return $this->sequence(
+        return [
             // December 1 - January 31: Every 3 weeks (dormant period)
             [
                 'start_month' => 12,
@@ -70,7 +71,7 @@ class SeasonalFrequencyPeriodFactory extends Factory
                 'end_day' => 30,
                 'frequency' => ServiceFrequency::Biweekly,
                 'notes' => 'Growth slows - less frequent mowing',
-            ]
-        );
+            ],
+        ];
     }
 }

@@ -32,4 +32,18 @@ class PropertyFactory extends Factory
             'service_status' => fake()->randomElement(['active', 'inactive', 'seasonal']),
         ];
     }
+
+    /**
+     * Indicate that the property has been geocoded.
+     */
+    public function geocoded(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'latitude' => fake()->latitude(25, 30),
+            'longitude' => fake()->longitude(-85, -80),
+            'geocoded_at' => now(),
+            'geocoding_failed' => false,
+            'geocoding_error' => null,
+        ]);
+    }
 }

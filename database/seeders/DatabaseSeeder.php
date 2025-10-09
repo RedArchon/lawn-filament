@@ -28,15 +28,18 @@ class DatabaseSeeder extends Seeder
         $customers = \App\Models\Customer::factory(20)->create();
 
         // Create 50-100 properties distributed across customers
+        // Disable events to prevent geocoding during seeding
         $propertyCount = fake()->numberBetween(50, 100);
         $properties = collect();
 
-        foreach (range(1, $propertyCount) as $i) {
-            $property = \App\Models\Property::factory()->create([
-                'customer_id' => $customers->random()->id,
-            ]);
-            $properties->push($property);
-        }
+        \App\Models\Property::withoutEvents(function () use ($propertyCount, $customers, &$properties) {
+            foreach (range(1, $propertyCount) as $i) {
+                $property = \App\Models\Property::factory()->create([
+                    'customer_id' => $customers->random()->id,
+                ]);
+                $properties->push($property);
+            }
+        });
 
         // Create 30-50 notes (mix of customer notes and property notes)
         $noteCount = fake()->numberBetween(30, 50);

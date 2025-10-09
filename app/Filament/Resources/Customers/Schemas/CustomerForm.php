@@ -17,95 +17,140 @@ class CustomerForm
             ->components([
                 Section::make('Contact Information')
                     ->schema([
-                        TextInput::make('name')
-                            ->required()
-                            ->minLength(2)
-                            ->maxLength(255)
-                            ->placeholder('John Doe')
-                            ->helperText('Full name of the customer'),
-
-                        TextInput::make('email')
-                            ->required()
-                            ->email()
-                            ->unique('customers', 'email', ignoreRecord: true)
-                            ->maxLength(255)
-                            ->placeholder('customer@example.com')
-                            ->helperText('Primary email address for communication'),
-
-                        TextInput::make('phone')
-                            ->required()
-                            ->tel()
-                            ->regex('/^[\d\s\-\(\)\+]+$/')
-                            ->maxLength(255)
-                            ->placeholder('(555) 123-4567')
-                            ->helperText('Primary contact phone number'),
+                        static::getNameFormField(),
+                        static::getEmailFormField(),
+                        static::getPhoneFormField(),
                     ])
                     ->columns(3)
-                    ->collapsible(false),
+                    ->collapsible(),
 
                 Section::make('Additional Information')
                     ->schema([
-                        TextInput::make('company_name')
-                            ->minLength(2)
-                            ->maxLength(255)
-                            ->nullable()
-                            ->placeholder('Company Name LLC')
-                            ->helperText('Optional: If customer is a business')
-                            ->columnSpan(2),
-
-                        Select::make('status')
-                            ->options([
-                                'active' => 'Active',
-                                'inactive' => 'Inactive',
-                            ])
-                            ->default('active')
-                            ->required()
-                            ->helperText('Customer account status'),
+                        static::getCompanyNameFormField(),
+                        static::getStatusFormField(),
                     ])
                     ->columns(3)
-                    ->collapsible(false),
+                    ->collapsible()
+                    ->collapsed(),
 
                 Section::make('Billing Address')
                     ->schema([
-                        TextInput::make('billing_address')
-                            ->minLength(5)
-                            ->maxLength(255)
-                            ->nullable()
-                            ->requiredIf('service_billing_address', true)
-                            ->placeholder('123 Main Street')
-                            ->columnSpanFull(),
-
-                        TextInput::make('billing_city')
-                            ->minLength(2)
-                            ->maxLength(255)
-                            ->nullable()
-                            ->requiredIf('service_billing_address', true)
-                            ->placeholder('City'),
-
-                        Select::make('billing_state')
-                            ->options(State::options())
-                            ->searchable()
-                            ->nullable()
-                            ->requiredIf('service_billing_address', true)
-                            ->placeholder('Select state'),
-
-                        TextInput::make('billing_zip')
-                            ->regex('/^\d{5}(-\d{4})?$/')
-                            ->maxLength(255)
-                            ->nullable()
-                            ->requiredIf('service_billing_address', true)
-                            ->placeholder('12345')
-                            ->mask('99999'),
-
-                        Checkbox::make('service_billing_address')
-                            ->label('Use this address for property service')
-                            ->helperText('Check this to create a property record at this address')
-                            ->visible(true)
-                            ->columnSpanFull()
-                            ->dehydrated(false),
+                        static::getBillingAddressFormField(),
+                        static::getBillingCityFormField(),
+                        static::getBillingStateFormField(),
+                        static::getBillingZipFormField(),
+                        static::getServiceBillingAddressFormField(),
                     ])
                     ->columns(3)
-                    ->collapsible(false),
+                    ->collapsible()
+                    ->collapsed(),
             ]);
+    }
+
+    public static function getNameFormField(): TextInput
+    {
+        return TextInput::make('name')
+            ->required()
+            ->minLength(2)
+            ->maxLength(255)
+            ->placeholder('John Doe')
+            ->helperText('Full name of the customer');
+    }
+
+    public static function getEmailFormField(): TextInput
+    {
+        return TextInput::make('email')
+            ->required()
+            ->email()
+            ->unique('customers', 'email', ignoreRecord: true)
+            ->maxLength(255)
+            ->placeholder('customer@example.com')
+            ->helperText('Primary email address for communication');
+    }
+
+    public static function getPhoneFormField(): TextInput
+    {
+        return TextInput::make('phone')
+            ->required()
+            ->tel()
+            ->regex('/^[\d\s\-\(\)\+]+$/')
+            ->maxLength(255)
+            ->placeholder('(555) 123-4567')
+            ->helperText('Primary contact phone number');
+    }
+
+    public static function getCompanyNameFormField(): TextInput
+    {
+        return TextInput::make('company_name')
+            ->minLength(2)
+            ->maxLength(255)
+            ->nullable()
+            ->placeholder('Company Name LLC')
+            ->helperText('Optional: If customer is a business')
+            ->columnSpan(2);
+    }
+
+    public static function getStatusFormField(): Select
+    {
+        return Select::make('status')
+            ->options([
+                'active' => 'Active',
+                'inactive' => 'Inactive',
+            ])
+            ->default('active')
+            ->required()
+            ->helperText('Customer account status');
+    }
+
+    public static function getBillingAddressFormField(): TextInput
+    {
+        return TextInput::make('billing_address')
+            ->minLength(5)
+            ->maxLength(255)
+            ->nullable()
+            ->requiredIf('service_billing_address', true)
+            ->placeholder('123 Main Street')
+            ->columnSpanFull();
+    }
+
+    public static function getBillingCityFormField(): TextInput
+    {
+        return TextInput::make('billing_city')
+            ->minLength(2)
+            ->maxLength(255)
+            ->nullable()
+            ->requiredIf('service_billing_address', true)
+            ->placeholder('City');
+    }
+
+    public static function getBillingStateFormField(): Select
+    {
+        return Select::make('billing_state')
+            ->options(State::options())
+            ->searchable()
+            ->nullable()
+            ->requiredIf('service_billing_address', true)
+            ->placeholder('Select state');
+    }
+
+    public static function getBillingZipFormField(): TextInput
+    {
+        return TextInput::make('billing_zip')
+            ->regex('/^\d{5}(-\d{4})?$/')
+            ->maxLength(255)
+            ->nullable()
+            ->requiredIf('service_billing_address', true)
+            ->placeholder('12345')
+            ->mask('99999');
+    }
+
+    public static function getServiceBillingAddressFormField(): Checkbox
+    {
+        return Checkbox::make('service_billing_address')
+            ->label('Use this address for property service')
+            ->helperText('Check this to create a property record at this address')
+            ->visible(true)
+            ->columnSpanFull()
+            ->dehydrated(false);
     }
 }

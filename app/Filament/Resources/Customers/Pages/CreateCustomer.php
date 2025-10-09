@@ -141,6 +141,7 @@ class CreateCustomer extends CreateRecord
     {
         if ($this->customerAlreadyExists()) {
             $this->afterCreate();
+            $this->redirect($this->getRedirectUrl());
 
             return;
         }

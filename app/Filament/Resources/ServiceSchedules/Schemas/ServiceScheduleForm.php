@@ -2,8 +2,11 @@
 
 namespace App\Filament\Resources\ServiceSchedules\Schemas;
 
+use App\Enums\DayOfWeek;
+use App\Enums\Month;
 use App\Enums\SchedulingType;
 use App\Enums\ServiceFrequency;
+use App\Enums\WeekOfMonth;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Repeater;
@@ -89,25 +92,15 @@ class ServiceScheduleForm
                             ->columnSpan(1),
                         Select::make('day_of_week')
                             ->label('Day of Week')
-                            ->options([
-                                0 => 'Sunday',
-                                1 => 'Monday',
-                                2 => 'Tuesday',
-                                3 => 'Wednesday',
-                                4 => 'Thursday',
-                                5 => 'Friday',
-                                6 => 'Saturday',
-                            ])
+                            ->options(DayOfWeek::options())
                             ->visible(fn (Get $get) => in_array($get('frequency'), ['weekly', 'biweekly']))
                             ->helperText('Select the day of week for the service')
                             ->columnSpan(1),
-                        TextInput::make('week_of_month')
+                        Select::make('week_of_month')
                             ->label('Week of Month')
-                            ->numeric()
-                            ->minValue(1)
-                            ->maxValue(4)
+                            ->options(WeekOfMonth::options())
                             ->visible(fn (Get $get) => $get('frequency') === 'monthly')
-                            ->helperText('1 = First week, 2 = Second week, etc.')
+                            ->helperText('Which week of the month for the service')
                             ->columnSpan(1),
 
                         // Seasonal Schedule Fields
@@ -132,20 +125,7 @@ class ServiceScheduleForm
                             ->schema([
                                 Select::make('start_month')
                                     ->label('Start Month')
-                                    ->options([
-                                        1 => 'January',
-                                        2 => 'February',
-                                        3 => 'March',
-                                        4 => 'April',
-                                        5 => 'May',
-                                        6 => 'June',
-                                        7 => 'July',
-                                        8 => 'August',
-                                        9 => 'September',
-                                        10 => 'October',
-                                        11 => 'November',
-                                        12 => 'December',
-                                    ])
+                                    ->options(Month::options())
                                     ->required()
                                     ->columnSpan(1),
                                 TextInput::make('start_day')
@@ -157,20 +137,7 @@ class ServiceScheduleForm
                                     ->columnSpan(1),
                                 Select::make('end_month')
                                     ->label('End Month')
-                                    ->options([
-                                        1 => 'January',
-                                        2 => 'February',
-                                        3 => 'March',
-                                        4 => 'April',
-                                        5 => 'May',
-                                        6 => 'June',
-                                        7 => 'July',
-                                        8 => 'August',
-                                        9 => 'September',
-                                        10 => 'October',
-                                        11 => 'November',
-                                        12 => 'December',
-                                    ])
+                                    ->options(Month::options())
                                     ->required()
                                     ->columnSpan(1),
                                 TextInput::make('end_day')

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Customers\Pages;
 
 use App\Filament\Resources\Customers\CustomerResource;
 use App\Filament\Resources\Customers\Schemas\CustomerForm;
+use App\Models\Customer;
 use App\Models\Property;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Schemas\Components\View;
@@ -52,7 +53,8 @@ class CreateCustomer extends CreateRecord
                 ->afterValidation(function () {
                     // Save the customer after billing address step so it's available for properties step
                     if (! $this->record) {
-                        $this->save();
+                        $data = $this->form->getState();
+                        $this->record = Customer::create($data);
                     }
                 }),
 

@@ -16,29 +16,6 @@
                     <div id="map" style="height: 100%; width: 100%;"></div>
                 </div>
 
-                <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                    <div class="flex items-center gap-2">
-                        <x-filament::icon
-                            icon="heroicon-o-map-pin"
-                            class="w-5 h-5"
-                        />
-                        <span>{{ $this->getPropertyAddress() }}</span>
-                    </div>
-
-                    <div class="flex items-center gap-2">
-                        <x-filament::icon
-                            icon="heroicon-o-check-circle"
-                            class="w-5 h-5 text-success-500"
-                        />
-                        <span>Geocoded on {{ $this->getProperty()?->geocoded_at?->format('M j, Y') }}</span>
-                    </div>
-
-                    @if ($this->getProperty()?->latitude && $this->getProperty()?->longitude)
-                        <div class="flex items-center gap-2">
-                            <span class="font-mono text-xs">{{ number_format($this->getProperty()->latitude, 6) }}, {{ number_format($this->getProperty()->longitude, 6) }}</span>
-                        </div>
-                    @endif
-                </div>
             </div>
 
         @else

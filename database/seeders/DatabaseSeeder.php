@@ -28,15 +28,17 @@ class DatabaseSeeder extends Seeder
         $customers = \App\Models\Customer::factory(20)->create();
 
         // Create 50-100 properties distributed across customers
-        // Disable events to prevent geocoding during seeding
+        // Use real test addresses with pre-geocoded coordinates
         $propertyCount = fake()->numberBetween(50, 100);
         $properties = collect();
 
         \App\Models\Property::withoutEvents(function () use ($propertyCount, $customers, &$properties) {
             foreach (range(1, $propertyCount) as $i) {
-                $property = \App\Models\Property::factory()->create([
-                    'customer_id' => $customers->random()->id,
-                ]);
+                $property = \App\Models\Property::factory()
+                    ->testAddressesGeocoded()
+                    ->create([
+                        'customer_id' => $customers->random()->id,
+                    ]);
                 $properties->push($property);
             }
         });

@@ -29,9 +29,39 @@ class PropertyMapWidget extends Widget implements HasActions, HasSchemas
 
     protected $listeners = ['refresh' => '$refresh'];
 
+    // Configuration constants
+    private const GEOCODING_TIMEOUT_SECONDS = 60;
+
+    // Property caching to avoid multiple database queries
+    private ?Property $cachedProperty = null;
+
+    private ?int $lastPropertyCheck = null;
+
     public function mount(?int $recordId = null): void
     {
         $this->recordId = $recordId;
+    }
+
+    /**
+     * Get the property with caching to avoid multiple database queries.
+     * Cache expires after 5 seconds to ensure we get fresh data during geocoding.
+     */
+    private function getCachedProperty(): ?Property
+    {
+        $now = time();
+
+        // If we have a cached property and it's been less than 5 seconds, return it
+        if ($this->cachedProperty && $this->lastPropertyCheck && ($now - $this->lastPropertyCheck) < 5) {
+            return $this->cachedProperty;
+        }
+
+        // Fetch fresh property and cache it
+        if ($this->recordId) {
+            $this->cachedProperty = Property::find($this->recordId);
+            $this->lastPropertyCheck = $now;
+        }
+
+        return $this->cachedProperty;
     }
 
     public function checkGeocodingStatus(): void
@@ -54,8 +84,8 @@ class PropertyMapWidget extends Widget implements HasActions, HasSchemas
             return;
         }
 
-        // Stop polling after 60 seconds
-        if ($this->geocodingStartTime && (time() - $this->geocodingStartTime) > 60) {
+        // Stop polling after timeout
+        if ($this->geocodingStartTime && (time() - $this->geocodingStartTime) > self::GEOCODING_TIMEOUT_SECONDS) {
             $this->isGeocoding = false;
 
             Notification::make()
@@ -72,13 +102,12 @@ class PropertyMapWidget extends Widget implements HasActions, HasSchemas
             return false;
         }
 
-        // Reload the record from database to get latest geocoding status
-        $freshRecord = Property::find($this->recordId);
+        $property = $this->getCachedProperty();
 
-        return $freshRecord
-            && $freshRecord->latitude
-            && $freshRecord->longitude
-            && ! $freshRecord->geocoding_failed;
+        return $property
+            && $property->latitude
+            && $property->longitude
+            && ! $property->geocoding_failed;
     }
 
     public function needsGeocoding(): bool
@@ -92,10 +121,9 @@ class PropertyMapWidget extends Widget implements HasActions, HasSchemas
             return false;
         }
 
-        // Reload the record from database to get latest geocoding status
-        $freshRecord = Property::find($this->recordId);
+        $property = $this->getCachedProperty();
 
-        return $freshRecord && $freshRecord->geocoding_failed;
+        return $property && $property->geocoding_failed;
     }
 
     public function getPropertyAddress(): string
@@ -104,9 +132,9 @@ class PropertyMapWidget extends Widget implements HasActions, HasSchemas
             return 'Unknown Address';
         }
 
-        $freshRecord = Property::find($this->recordId);
+        $property = $this->getCachedProperty();
 
-        return $freshRecord ? $freshRecord->full_address : 'Unknown Address';
+        return $property ? $property->full_address : 'Unknown Address';
     }
 
     public function getProperty(): ?Property
@@ -115,7 +143,7 @@ class PropertyMapWidget extends Widget implements HasActions, HasSchemas
             return null;
         }
 
-        return Property::find($this->recordId);
+        return $this->getCachedProperty();
     }
 
     public function geocodeAction(): Action
@@ -131,9 +159,9 @@ class PropertyMapWidget extends Widget implements HasActions, HasSchemas
                     return "Do you want to geocode this property?\n\nAddress: Unknown";
                 }
 
-                $freshRecord = Property::find($this->recordId);
+                $property = $this->getCachedProperty();
 
-                return "Do you want to geocode this property?\n\nAddress: ".($freshRecord ? $freshRecord->full_address : 'Unknown');
+                return "Do you want to geocode this property?\n\nAddress: ".($property ? $property->full_address : 'Unknown');
             })
             ->modalSubmitActionLabel('Yes, Geocode')
             ->action(function () {
@@ -141,12 +169,12 @@ class PropertyMapWidget extends Widget implements HasActions, HasSchemas
                     return;
                 }
 
-                $freshRecord = Property::find($this->recordId);
-                if (! $freshRecord) {
+                $property = $this->getCachedProperty();
+                if (! $property) {
                     return;
                 }
 
-                GeocodePropertyJob::dispatch($freshRecord);
+                GeocodePropertyJob::dispatch($property);
 
                 $this->isGeocoding = true;
                 $this->geocodingStartTime = time();

@@ -83,12 +83,20 @@
     @if ($this->isGeocoded())
         @script
         <script>
-            // Define the callback function in the global scope
-            window.initPropertyMap = function() {
-                const position = {
-                    lat: {{ $this->getProperty()?->latitude ?? 0 }},
-                    lng: {{ $this->getProperty()?->longitude ?? 0 }}
-                };
+                   // Define the callback function in the global scope
+                   window.initPropertyMap = function() {
+                       @if ($this->getProperty()?->latitude && $this->getProperty()?->longitude)
+                       const position = {
+                           lat: {{ $this->getProperty()->latitude }},
+                           lng: {{ $this->getProperty()->longitude }}
+                       };
+                       @else
+                       // Fallback to Chicago if coordinates are invalid
+                       const position = {
+                           lat: 41.8781,
+                           lng: -87.6298
+                       };
+                       @endif
 
                 const map = new google.maps.Map(document.getElementById('map'), {
                     zoom: 17,

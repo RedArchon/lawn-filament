@@ -46,48 +46,4 @@ class PropertyFactory extends Factory
             'geocoding_error' => null,
         ]);
     }
-
-    /**
-     * Real addresses for testing (without geocoding).
-     * Use this when you want the geocoding to happen naturally via events.
-     */
-    public function testAddresses(): static
-    {
-        $addresses = require database_path('seeders/data/test_addresses.php');
-        $selectedAddress = fake()->randomElement($addresses);
-
-        return $this->state(fn (array $attributes) => [
-            'address' => $selectedAddress['address'],
-            'city' => $selectedAddress['city'],
-            'state' => $selectedAddress['state'],
-            'zip' => $selectedAddress['zip'],
-            'latitude' => null,
-            'longitude' => null,
-            'geocoded_at' => null,
-            'geocoding_failed' => false,
-            'geocoding_error' => null,
-        ]);
-    }
-
-    /**
-     * Real addresses for testing with pre-geocoded coordinates.
-     * Use this for faster seeding without API calls.
-     */
-    public function testAddressesGeocoded(): static
-    {
-        $addresses = require database_path('seeders/data/test_addresses.php');
-        $selectedAddress = fake()->randomElement($addresses);
-
-        return $this->state(fn (array $attributes) => [
-            'address' => $selectedAddress['address'],
-            'city' => $selectedAddress['city'],
-            'state' => $selectedAddress['state'],
-            'zip' => $selectedAddress['zip'],
-            'latitude' => $selectedAddress['lat'],
-            'longitude' => $selectedAddress['lon'],
-            'geocoded_at' => now()->subDays(fake()->numberBetween(1, 30)),
-            'geocoding_failed' => false,
-            'geocoding_error' => null,
-        ]);
-    }
 }

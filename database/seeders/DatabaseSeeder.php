@@ -28,14 +28,26 @@ class DatabaseSeeder extends Seeder
         $customers = \App\Models\Customer::factory(20)->create();
 
         // Create 50-100 properties distributed across customers
-        // Disable events to prevent geocoding during seeding
+        // Use real Brooksville addresses for route optimization testing
         $propertyCount = fake()->numberBetween(50, 100);
         $properties = collect();
+        $realAddresses = require database_path('seeders/data/test_addresses.php');
 
-        \App\Models\Property::withoutEvents(function () use ($propertyCount, $customers, &$properties) {
+        \App\Models\Property::withoutEvents(function () use ($propertyCount, $customers, $realAddresses, &$properties) {
             foreach (range(1, $propertyCount) as $i) {
+                $selectedAddress = fake()->randomElement($realAddresses);
+
                 $property = \App\Models\Property::factory()->create([
                     'customer_id' => $customers->random()->id,
+                    'address' => $selectedAddress['address'],
+                    'city' => $selectedAddress['city'],
+                    'state' => $selectedAddress['state'],
+                    'zip' => $selectedAddress['zip'],
+                    'latitude' => $selectedAddress['lat'],
+                    'longitude' => $selectedAddress['lon'],
+                    'geocoded_at' => now()->subDays(fake()->numberBetween(1, 30)),
+                    'geocoding_failed' => false,
+                    'geocoding_error' => null,
                 ]);
                 $properties->push($property);
             }

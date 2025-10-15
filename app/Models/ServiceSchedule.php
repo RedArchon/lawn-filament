@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Contracts\BelongsToCompany as BelongsToCompanyContract;
 use App\Enums\SchedulingType;
 use App\Enums\ServiceFrequency;
+use App\Traits\BelongsToCompany;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,11 +15,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 
-class ServiceSchedule extends Model
+class ServiceSchedule extends Model implements BelongsToCompanyContract
 {
-    use HasFactory, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'company_id',
         'property_id',
         'service_type_id',
         'scheduling_type',

@@ -16,11 +16,11 @@ class CompanyFactory extends Factory
      */
     public function definition(): array
     {
-        $companyName = fake()->company();
+        $companyName = fake()->unique()->company();
 
         return [
             'name' => $companyName,
-            'slug' => \Illuminate\Support\Str::slug($companyName),
+            'slug' => \Illuminate\Support\Str::slug($companyName) . '-' . fake()->unique()->randomNumber(5),
             'email' => fake()->companyEmail(),
             'phone' => fake()->phoneNumber(),
             'address' => fake()->streetAddress(),

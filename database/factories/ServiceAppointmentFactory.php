@@ -15,11 +15,13 @@ class ServiceAppointmentFactory extends Factory
     public function definition(): array
     {
         $status = fake()->randomElement(['scheduled', 'in_progress', 'completed', 'cancelled', 'skipped']);
+        $schedule = ServiceSchedule::factory()->create();
 
         return [
-            'service_schedule_id' => ServiceSchedule::factory(),
-            'property_id' => Property::factory(),
-            'service_type_id' => ServiceType::factory(),
+            'company_id' => $schedule->company_id,
+            'service_schedule_id' => $schedule->id,
+            'property_id' => $schedule->property_id,
+            'service_type_id' => $schedule->service_type_id,
             'scheduled_date' => fake()->dateTimeBetween('now', '+30 days'),
             'scheduled_time' => fake()->optional(0.5)->time('H:i'),
             'status' => $status,

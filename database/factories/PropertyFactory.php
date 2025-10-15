@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\Company;
+use App\Models\Customer;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -16,8 +18,11 @@ class PropertyFactory extends Factory
      */
     public function definition(): array
     {
+        $customer = Customer::factory()->create();
+
         return [
-            'customer_id' => \App\Models\Customer::factory(),
+            'company_id' => $customer->company_id,
+            'customer_id' => $customer->id,
             'address' => fake()->streetAddress(),
             'city' => fake()->city(),
             'state' => fake()->stateAbbr(),

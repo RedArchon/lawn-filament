@@ -1,0 +1,14 @@
+{
+  "context": {
+    "alwaysInclude": [
+      "composer.json",
+      "boost.json",
+      "README.md",
+      "config/app.php"
+    ]
+  },
+  "preferences": {
+    "autoCommit": false,
+    "confirmBeforePush": true
+  }
+}

@@ -14,8 +14,6 @@ class SeasonalFrequencyPeriod extends Model implements BelongsToCompanyContract
 {
     use BelongsToCompany, HasFactory;
 
-    protected $with = ['company'];
-
     protected $fillable = [
         'company_id',
         'service_schedule_id',

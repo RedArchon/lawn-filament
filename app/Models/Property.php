@@ -17,8 +17,6 @@ class Property extends Model implements BelongsToCompanyContract
 {
     use BelongsToCompany, HasFactory, SoftDeletes;
 
-    protected $with = ['company'];
-
     protected $fillable = [
         'company_id',
         'customer_id',

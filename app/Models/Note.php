@@ -12,6 +12,8 @@ class Note extends Model implements BelongsToCompanyContract
 {
     use BelongsToCompany, HasFactory;
 
+    protected $with = ['company'];
+
     protected $fillable = [
         'company_id',
         'content',

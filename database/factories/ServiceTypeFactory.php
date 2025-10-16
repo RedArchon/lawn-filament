@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Company;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -25,6 +26,7 @@ class ServiceTypeFactory extends Factory
         $service = fake()->randomElement($serviceTypes);
 
         return [
+            'company_id' => Company::factory(),
             'name' => $service['name'],
             'description' => fake()->optional(0.7)->sentence(),
             'default_duration_minutes' => $service['duration'],

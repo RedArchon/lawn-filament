@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Contracts\BelongsToCompany as BelongsToCompanyContract;
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,11 +13,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Property extends Model
+class Property extends Model implements BelongsToCompanyContract
 {
-    use HasFactory, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'company_id',
         'customer_id',
         'address',
         'city',

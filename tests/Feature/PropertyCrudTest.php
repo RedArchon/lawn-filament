@@ -6,6 +6,7 @@ use App\Filament\Resources\Properties\Pages\CreateProperty;
 use App\Filament\Resources\Properties\Pages\EditProperty;
 use App\Filament\Resources\Properties\Pages\ListProperties;
 use App\Jobs\GeocodePropertyJob;
+use App\Models\Company;
 use App\Models\Customer;
 use App\Models\Property;
 use App\Models\User;
@@ -18,10 +19,16 @@ class PropertyCrudTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected Company $company;
+
+    protected User $user;
+
     protected function setUp(): void
     {
         parent::setUp();
-        $this->actingAs(User::factory()->create());
+        $this->company = Company::factory()->create();
+        $this->user = User::factory()->create(['company_id' => $this->company->id]);
+        $this->actingAs($this->user);
         Queue::fake();
     }
 
@@ -33,7 +40,7 @@ class PropertyCrudTest extends TestCase
 
     public function test_can_list_properties(): void
     {
-        $properties = Property::factory()->count(10)->create();
+        $properties = Property::factory()->count(10)->create(['company_id' => $this->company->id]);
 
         Livewire::test(ListProperties::class)
             ->assertCanSeeTableRecords($properties);
@@ -47,7 +54,7 @@ class PropertyCrudTest extends TestCase
 
     public function test_can_create_a_property(): void
     {
-        $customer = Customer::factory()->create();
+        $customer = Customer::factory()->create(['company_id' => $this->company->id]);
         $newPropertyData = Property::factory()->make();
 
         Livewire::test(CreateProperty::class)
@@ -87,7 +94,7 @@ class PropertyCrudTest extends TestCase
 
     public function test_can_render_property_edit_page(): void
     {
-        $property = Property::factory()->create();
+        $property = Property::factory()->create(['company_id' => $this->company->id]);
 
         Livewire::test(EditProperty::class, [
             'record' => $property->id,
@@ -101,17 +108,19 @@ class PropertyCrudTest extends TestCase
 
     public function test_can_update_a_property(): void
     {
-        $property = Property::factory()->create();
+        $property = Property::factory()->create(['company_id' => $this->company->id]);
         $newPropertyData = Property::factory()->make();
 
         Livewire::test(EditProperty::class, [
             'record' => $property->id,
         ])
             ->fillForm([
+                'customer_id' => $property->customer_id,
                 'address' => $newPropertyData->address,
                 'city' => $newPropertyData->city,
                 'state' => $newPropertyData->state,
                 'zip' => $newPropertyData->zip,
+                'service_status' => $property->service_status,
             ])
             ->call('save')
             ->assertNotified();
@@ -125,7 +134,7 @@ class PropertyCrudTest extends TestCase
 
     public function test_can_delete_a_property(): void
     {
-        $property = Property::factory()->create();
+        $property = Property::factory()->create(['company_id' => $this->company->id]);
 
         Livewire::test(EditProperty::class, [
             'record' => $property->id,
@@ -141,8 +150,14 @@ class PropertyCrudTest extends TestCase
 
     public function test_can_filter_properties_by_service_status(): void
     {
-        Property::factory()->count(5)->create(['service_status' => 'active']);
-        $inactiveProperties = Property::factory()->count(3)->create(['service_status' => 'inactive']);
+        Property::factory()->count(5)->create([
+            'company_id' => $this->company->id,
+            'service_status' => 'active',
+        ]);
+        $inactiveProperties = Property::factory()->count(3)->create([
+            'company_id' => $this->company->id,
+            'service_status' => 'inactive',
+        ]);
 
         Livewire::test(ListProperties::class)
             ->filterTable('service_status', 'inactive')
@@ -152,9 +167,12 @@ class PropertyCrudTest extends TestCase
 
     public function test_can_filter_properties_by_customer(): void
     {
-        $customer = Customer::factory()->create();
-        $customerProperties = Property::factory()->count(3)->create(['customer_id' => $customer->id]);
-        Property::factory()->count(5)->create();
+        $customer = Customer::factory()->create(['company_id' => $this->company->id]);
+        $customerProperties = Property::factory()->count(3)->create([
+            'company_id' => $this->company->id,
+            'customer_id' => $customer->id,
+        ]);
+        Property::factory()->count(5)->create(['company_id' => $this->company->id]);
 
         Livewire::test(ListProperties::class)
             ->filterTable('customer_id', $customer->id)
@@ -164,7 +182,7 @@ class PropertyCrudTest extends TestCase
 
     public function test_can_search_properties_by_address(): void
     {
-        $properties = Property::factory()->count(5)->create();
+        $properties = Property::factory()->count(5)->create(['company_id' => $this->company->id]);
         $targetProperty = $properties->first();
 
         Livewire::test(ListProperties::class)
@@ -174,13 +192,18 @@ class PropertyCrudTest extends TestCase
 
     public function test_dispatches_geocoding_job_when_address_changes(): void
     {
-        $property = Property::factory()->create();
+        $property = Property::factory()->create(['company_id' => $this->company->id]);
 
         Livewire::test(EditProperty::class, [
             'record' => $property->id,
         ])
             ->fillForm([
+                'customer_id' => $property->customer_id,
                 'address' => '456 New Street',
+                'city' => $property->city,
+                'state' => $property->state,
+                'zip' => $property->zip,
+                'service_status' => $property->service_status,
             ])
             ->call('save');
 

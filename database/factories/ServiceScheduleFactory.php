@@ -19,9 +19,12 @@ class ServiceScheduleFactory extends Factory
         $startDate = fake()->dateTimeBetween('-2 months', 'now');
         $endDate = fake()->boolean(30) ? fake()->dateTimeBetween('+3 months', '+6 months') : null;
 
+        $property = Property::factory()->create();
+
         return [
-            'property_id' => Property::factory(),
-            'service_type_id' => ServiceType::factory(),
+            'company_id' => $property->company_id,
+            'property_id' => $property->id,
+            'service_type_id' => ServiceType::factory()->create(['company_id' => $property->company_id])->id,
             'scheduling_type' => $schedulingType,
             'frequency' => $frequency,
             'start_date' => $startDate,

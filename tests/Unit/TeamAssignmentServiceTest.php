@@ -2,9 +2,11 @@
 
 namespace Tests\Unit;
 
+use App\Models\Company;
 use App\Models\Property;
 use App\Models\ServiceAppointment;
 use App\Models\Team;
+use App\Models\User;
 use App\Services\TeamAssignmentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -15,21 +17,36 @@ class TeamAssignmentServiceTest extends TestCase
 
     protected TeamAssignmentService $service;
 
+    protected Company $company;
+
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->company = Company::factory()->create();
+        $user = User::factory()->create(['company_id' => $this->company->id]);
+        $this->actingAs($user);
 
         $this->service = new TeamAssignmentService;
     }
 
     public function test_auto_assigns_appointments_to_active_teams(): void
     {
-        $team1 = Team::factory()->create(['is_active' => true, 'max_daily_appointments' => 10]);
-        $team2 = Team::factory()->create(['is_active' => true, 'max_daily_appointments' => 10]);
+        $team1 = Team::factory()->create([
+            'company_id' => $this->company->id,
+            'is_active' => true,
+            'max_daily_appointments' => 10,
+        ]);
+        $team2 = Team::factory()->create([
+            'company_id' => $this->company->id,
+            'is_active' => true,
+            'max_daily_appointments' => 10,
+        ]);
 
         $date = now()->addDay();
 
         $appointments = ServiceAppointment::factory()->count(5)->create([
+            'company_id' => $this->company->id,
             'scheduled_date' => $date,
             'team_id' => null,
             'status' => 'scheduled',
@@ -48,11 +65,16 @@ class TeamAssignmentServiceTest extends TestCase
 
     public function test_respects_team_max_daily_appointments(): void
     {
-        $team = Team::factory()->create(['is_active' => true, 'max_daily_appointments' => 2]);
+        $team = Team::factory()->create([
+            'company_id' => $this->company->id,
+            'is_active' => true,
+            'max_daily_appointments' => 2,
+        ]);
 
         $date = now()->addDay();
 
         ServiceAppointment::factory()->count(5)->create([
+            'company_id' => $this->company->id,
             'scheduled_date' => $date,
             'team_id' => null,
             'status' => 'scheduled',
@@ -67,12 +89,21 @@ class TeamAssignmentServiceTest extends TestCase
 
     public function test_distributes_appointments_across_multiple_teams(): void
     {
-        $team1 = Team::factory()->create(['is_active' => true, 'max_daily_appointments' => 3]);
-        $team2 = Team::factory()->create(['is_active' => true, 'max_daily_appointments' => 3]);
+        $team1 = Team::factory()->create([
+            'company_id' => $this->company->id,
+            'is_active' => true,
+            'max_daily_appointments' => 3,
+        ]);
+        $team2 = Team::factory()->create([
+            'company_id' => $this->company->id,
+            'is_active' => true,
+            'max_daily_appointments' => 3,
+        ]);
 
         $date = now()->addDay();
 
         ServiceAppointment::factory()->count(6)->create([
+            'company_id' => $this->company->id,
             'scheduled_date' => $date,
             'team_id' => null,
             'status' => 'scheduled',
@@ -86,17 +117,23 @@ class TeamAssignmentServiceTest extends TestCase
 
     public function test_only_assigns_scheduled_appointments(): void
     {
-        $team = Team::factory()->create(['is_active' => true, 'max_daily_appointments' => 10]);
+        $team = Team::factory()->create([
+            'company_id' => $this->company->id,
+            'is_active' => true,
+            'max_daily_appointments' => 10,
+        ]);
 
         $date = now()->addDay();
 
         ServiceAppointment::factory()->create([
+            'company_id' => $this->company->id,
             'scheduled_date' => $date,
             'team_id' => null,
             'status' => 'scheduled',
         ]);
 
         ServiceAppointment::factory()->create([
+            'company_id' => $this->company->id,
             'scheduled_date' => $date,
             'team_id' => null,
             'status' => 'completed',
@@ -109,11 +146,15 @@ class TeamAssignmentServiceTest extends TestCase
 
     public function test_throws_exception_when_no_active_teams_available(): void
     {
-        Team::factory()->create(['is_active' => false]);
+        Team::factory()->create([
+            'company_id' => $this->company->id,
+            'is_active' => false,
+        ]);
 
         $date = now()->addDay();
 
         ServiceAppointment::factory()->create([
+            'company_id' => $this->company->id,
             'scheduled_date' => $date,
             'team_id' => null,
             'status' => 'scheduled',
@@ -127,7 +168,10 @@ class TeamAssignmentServiceTest extends TestCase
 
     public function test_throws_exception_when_no_unassigned_appointments(): void
     {
-        $team = Team::factory()->create(['is_active' => true]);
+        $team = Team::factory()->create([
+            'company_id' => $this->company->id,
+            'is_active' => true,
+        ]);
 
         $date = now()->addDay();
 
@@ -139,22 +183,29 @@ class TeamAssignmentServiceTest extends TestCase
 
     public function test_groups_geocoded_appointments_by_proximity(): void
     {
-        $team = Team::factory()->create(['is_active' => true, 'max_daily_appointments' => 20]);
+        $team = Team::factory()->create([
+            'company_id' => $this->company->id,
+            'is_active' => true,
+            'max_daily_appointments' => 20,
+        ]);
 
         $date = now()->addDay();
 
         // Create cluster of nearby properties
         $property1 = Property::factory()->create([
+            'company_id' => $this->company->id,
             'latitude' => 40.7128,
             'longitude' => -74.0060,
         ]);
 
         $property2 = Property::factory()->create([
+            'company_id' => $this->company->id,
             'latitude' => 40.7138,
             'longitude' => -74.0070,
         ]);
 
         $appointment1 = ServiceAppointment::factory()->create([
+            'company_id' => $this->company->id,
             'scheduled_date' => $date,
             'team_id' => null,
             'status' => 'scheduled',
@@ -162,6 +213,7 @@ class TeamAssignmentServiceTest extends TestCase
         ]);
 
         $appointment2 = ServiceAppointment::factory()->create([
+            'company_id' => $this->company->id,
             'scheduled_date' => $date,
             'team_id' => null,
             'status' => 'scheduled',
@@ -176,18 +228,24 @@ class TeamAssignmentServiceTest extends TestCase
 
     public function test_calculates_team_capacities_correctly(): void
     {
-        $team = Team::factory()->create(['is_active' => true, 'max_daily_appointments' => 10]);
+        $team = Team::factory()->create([
+            'company_id' => $this->company->id,
+            'is_active' => true,
+            'max_daily_appointments' => 10,
+        ]);
 
         $date = now()->addDay();
 
         // Create 3 existing appointments for this team
         ServiceAppointment::factory()->count(3)->create([
+            'company_id' => $this->company->id,
             'scheduled_date' => $date,
             'team_id' => $team->id,
         ]);
 
         // Try to assign 8 new appointments
         ServiceAppointment::factory()->count(8)->create([
+            'company_id' => $this->company->id,
             'scheduled_date' => $date,
             'team_id' => null,
             'status' => 'scheduled',

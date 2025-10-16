@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Company;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,6 +18,7 @@ class NoteFactory extends Factory
     public function definition(): array
     {
         return [
+            'company_id' => Company::factory(),
             'content' => fake()->paragraphs(fake()->numberBetween(1, 3), true),
             'created_by' => null,
         ];

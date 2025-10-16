@@ -104,13 +104,15 @@ class TeamAssignmentService
     {
         // Separate geocoded and non-geocoded appointments
         $geocoded = $appointments->filter(function ($appointment) {
-            return $appointment->property->latitude
+            return $appointment->property
+                && $appointment->property->latitude
                 && $appointment->property->longitude
                 && ! $appointment->property->geocoding_failed;
         });
 
         $notGeocoded = $appointments->filter(function ($appointment) {
-            return ! $appointment->property->latitude
+            return ! $appointment->property
+                || ! $appointment->property->latitude
                 || ! $appointment->property->longitude
                 || $appointment->property->geocoding_failed;
         });

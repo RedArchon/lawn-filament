@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Company;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -20,6 +21,7 @@ class TeamFactory extends Factory
         $crewNames = ['Alpha Crew', 'Bravo Team', 'Charlie Squad', 'Delta Crew', 'Echo Team', 'Foxtrot Squad'];
 
         return [
+            'company_id' => Company::factory(),
             'name' => fake()->randomElement($crewNames).' '.fake()->numberBetween(1, 20),
             'color' => fake()->randomElement($colors),
             'is_active' => fake()->boolean(90),

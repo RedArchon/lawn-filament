@@ -2,6 +2,7 @@
 
 namespace App\Scopes;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
@@ -12,7 +13,7 @@ class CompanyScope implements Scope
     {
         $user = auth()->user();
 
-        if ($user && $user->company_id) {
+        if ($user instanceof User && $user->company_id) {
             $builder->where($model->getTable() . '.company_id', $user->company_id);
         }
     }

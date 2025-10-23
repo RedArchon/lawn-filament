@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\Company;
+use App\Models\Customer;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +19,6 @@ class PropertyFactory extends Factory
     public function definition(): array
     {
         return [
-            'customer_id' => \App\Models\Customer::factory(),
             'address' => fake()->streetAddress(),
             'city' => fake()->city(),
             'state' => fake()->stateAbbr(),
@@ -31,6 +32,26 @@ class PropertyFactory extends Factory
             'access_instructions' => fake()->boolean(30) ? fake()->sentence() : null,
             'service_status' => fake()->randomElement(['active', 'inactive', 'seasonal']),
         ];
+    }
+
+    public function configure(): static
+    {
+        return $this->afterMaking(function (\App\Models\Property $property) {
+            // Handle company/customer relationship
+            if ($property->customer_id) {
+                // Customer provided - inherit their company if not set
+                if (! $property->company_id) {
+                    $property->company_id = Customer::find($property->customer_id)->company_id;
+                }
+            } else {
+                // No customer - create one with matching company
+                $customer = Customer::factory()->create(
+                    $property->company_id ? ['company_id' => $property->company_id] : []
+                );
+                $property->company_id = $customer->company_id;
+                $property->customer_id = $customer->id;
+            }
+        });
     }
 
     /**

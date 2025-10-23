@@ -18,8 +18,11 @@ class SeasonalFrequencyPeriodFactory extends Factory
      */
     public function definition(): array
     {
+        $schedule = ServiceSchedule::factory()->create();
+
         return [
-            'service_schedule_id' => ServiceSchedule::factory(),
+            'company_id' => $schedule->company_id,
+            'service_schedule_id' => $schedule->id,
             'start_month' => fake()->numberBetween(1, 12),
             'start_day' => 1,
             'end_month' => fake()->numberBetween(1, 12),

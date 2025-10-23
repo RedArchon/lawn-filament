@@ -2,17 +2,20 @@
 
 namespace App\Models;
 
+use App\Contracts\BelongsToCompany as BelongsToCompanyContract;
 use App\Enums\ServiceFrequency;
+use App\Traits\BelongsToCompany;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class SeasonalFrequencyPeriod extends Model
+class SeasonalFrequencyPeriod extends Model implements BelongsToCompanyContract
 {
-    use HasFactory;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
+        'company_id',
         'service_schedule_id',
         'start_month',
         'start_day',

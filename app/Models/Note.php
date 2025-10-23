@@ -2,15 +2,18 @@
 
 namespace App\Models;
 
+use App\Contracts\BelongsToCompany as BelongsToCompanyContract;
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
-class Note extends Model
+class Note extends Model implements BelongsToCompanyContract
 {
-    use HasFactory;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
+        'company_id',
         'content',
         'notable_type',
         'notable_id',

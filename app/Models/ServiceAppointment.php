@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Contracts\BelongsToCompany as BelongsToCompanyContract;
+use App\Traits\BelongsToCompany;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,11 +11,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ServiceAppointment extends Model
+class ServiceAppointment extends Model implements BelongsToCompanyContract
 {
-    use HasFactory, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'company_id',
         'service_schedule_id',
         'property_id',
         'service_type_id',

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Company;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -13,19 +14,31 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create admin user for Filament
+        // Create 2-3 test companies
+        $companies = Company::factory()->count(3)->create([
+            'is_active' => true,
+        ]);
+
+        $primaryCompany = $companies->first();
+
+        // Create admin user for primary company
         $admin = User::factory()->create([
+            'company_id' => $primaryCompany->id,
             'name' => 'Admin User',
             'email' => 'admin@example.com',
             'password' => bcrypt('password'),
         ]);
 
-        // Create additional users for team assignments
-        $users = User::factory()->count(8)->create();
+        // Create additional users for team assignments in primary company
+        $users = User::factory()->count(8)->create([
+            'company_id' => $primaryCompany->id,
+        ]);
         $users->push($admin);
 
-        // Create 20 customers
-        $customers = \App\Models\Customer::factory(20)->create();
+        // Create 20 customers for primary company
+        $customers = \App\Models\Customer::factory(20)->create([
+            'company_id' => $primaryCompany->id,
+        ]);
 
         // Create 50-100 properties distributed across customers
         // Use real Brooksville addresses for route optimization testing
@@ -33,11 +46,12 @@ class DatabaseSeeder extends Seeder
         $properties = collect();
         $realAddresses = require database_path('seeders/data/test_addresses.php');
 
-        \App\Models\Property::withoutEvents(function () use ($propertyCount, $customers, $realAddresses, &$properties) {
+        \App\Models\Property::withoutEvents(function () use ($propertyCount, $customers, $realAddresses, $primaryCompany, &$properties) {
             foreach (range(1, $propertyCount) as $i) {
                 $selectedAddress = fake()->randomElement($realAddresses);
 
                 $property = \App\Models\Property::factory()->create([
+                    'company_id' => $primaryCompany->id,
                     'customer_id' => $customers->random()->id,
                     'address' => $selectedAddress['address'],
                     'city' => $selectedAddress['city'],
@@ -62,12 +76,13 @@ class DatabaseSeeder extends Seeder
                 : $properties->random();
 
             \App\Models\Note::factory()->create([
+                'company_id' => $primaryCompany->id,
                 'notable_type' => get_class($notable),
                 'notable_id' => $notable->id,
             ]);
         }
 
-        // Create service types
+        // Create service types for primary company
         $serviceTypes = [
             ['name' => 'Mowing', 'duration' => 30, 'price' => 45.00, 'description' => 'Regular lawn mowing service'],
             ['name' => 'Edging', 'duration' => 15, 'price' => 20.00, 'description' => 'Edge trimming and cleanup'],
@@ -80,6 +95,7 @@ class DatabaseSeeder extends Seeder
         $createdServiceTypes = collect();
         foreach ($serviceTypes as $serviceType) {
             $createdServiceTypes->push(\App\Models\ServiceType::create([
+                'company_id' => $primaryCompany->id,
                 'name' => $serviceType['name'],
                 'description' => $serviceType['description'],
                 'default_duration_minutes' => $serviceType['duration'],
@@ -94,6 +110,7 @@ class DatabaseSeeder extends Seeder
         // Create seasonal schedules (Brooksville, FL lawn mowing)
         foreach (range(1, 10) as $i) {
             $schedule = \App\Models\ServiceSchedule::factory()->seasonal()->create([
+                'company_id' => $primaryCompany->id,
                 'property_id' => $properties->random()->id,
                 'service_type_id' => $mowingService->id,
                 'start_date' => now()->subMonth(),
@@ -105,7 +122,10 @@ class DatabaseSeeder extends Seeder
             // Add the 4 seasonal periods for Brooksville
             foreach (\Database\Factories\SeasonalFrequencyPeriodFactory::brooksvilleLawnCarePeriods() as $periodData) {
                 \App\Models\SeasonalFrequencyPeriod::create(array_merge(
-                    ['service_schedule_id' => $schedule->id],
+                    [
+                        'company_id' => $primaryCompany->id,
+                        'service_schedule_id' => $schedule->id,
+                    ],
                     $periodData
                 ));
             }
@@ -114,6 +134,7 @@ class DatabaseSeeder extends Seeder
         // Create recurring schedules (simple recurring)
         foreach (range(1, 20) as $i) {
             \App\Models\ServiceSchedule::factory()->recurring()->create([
+                'company_id' => $primaryCompany->id,
                 'property_id' => $properties->random()->id,
                 'service_type_id' => $createdServiceTypes->random()->id,
                 'is_active' => true,
@@ -123,6 +144,7 @@ class DatabaseSeeder extends Seeder
         // Create manual/one-off schedules
         foreach (range(1, 10) as $i) {
             \App\Models\ServiceSchedule::factory()->manual()->create([
+                'company_id' => $primaryCompany->id,
                 'property_id' => $properties->random()->id,
                 'service_type_id' => $createdServiceTypes->random()->id,
                 'start_date' => fake()->dateTimeBetween('now', '+1 month'),
@@ -131,14 +153,15 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // Create teams
+        // Create teams for primary company
         $teams = collect([
             ['name' => 'Alpha Crew', 'color' => '#10b981', 'max_daily_appointments' => 15],
             ['name' => 'Bravo Team', 'color' => '#3b82f6', 'max_daily_appointments' => 12],
             ['name' => 'Charlie Squad', 'color' => '#f59e0b', 'max_daily_appointments' => 10],
             ['name' => 'Delta Crew', 'color' => '#ef4444', 'max_daily_appointments' => 18],
-        ])->map(function ($teamData) {
+        ])->map(function ($teamData) use ($primaryCompany) {
             return \App\Models\Team::create([
+                'company_id' => $primaryCompany->id,
                 'name' => $teamData['name'],
                 'color' => $teamData['color'],
                 'is_active' => true,
@@ -196,6 +219,7 @@ class DatabaseSeeder extends Seeder
                 }
 
                 \App\Models\ServiceAppointment::create([
+                    'company_id' => $primaryCompany->id,
                     'property_id' => $property->id,
                     'service_type_id' => $serviceType->id,
                     'team_id' => $team?->id,

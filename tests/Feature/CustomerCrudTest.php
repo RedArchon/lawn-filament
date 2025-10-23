@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Filament\Resources\Customers\Pages\CreateCustomer;
 use App\Filament\Resources\Customers\Pages\EditCustomer;
 use App\Filament\Resources\Customers\Pages\ListCustomers;
+use App\Models\Company;
 use App\Models\Customer;
 use App\Models\Property;
 use App\Models\User;
@@ -16,10 +17,16 @@ class CustomerCrudTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected Company $company;
+
+    protected User $user;
+
     protected function setUp(): void
     {
         parent::setUp();
-        $this->actingAs(User::factory()->create());
+        $this->company = Company::factory()->create();
+        $this->user = User::factory()->create(['company_id' => $this->company->id]);
+        $this->actingAs($this->user);
     }
 
     public function test_can_render_customer_list_page(): void
@@ -30,7 +37,7 @@ class CustomerCrudTest extends TestCase
 
     public function test_can_list_customers(): void
     {
-        $customers = Customer::factory()->count(10)->create();
+        $customers = Customer::factory()->count(10)->create(['company_id' => $this->company->id]);
 
         Livewire::test(ListCustomers::class)
             ->assertCanSeeTableRecords($customers);
@@ -89,7 +96,7 @@ class CustomerCrudTest extends TestCase
 
     public function test_can_render_customer_edit_page(): void
     {
-        $customer = Customer::factory()->create();
+        $customer = Customer::factory()->create(['company_id' => $this->company->id]);
 
         Livewire::test(EditCustomer::class, [
             'record' => $customer->id,
@@ -103,7 +110,7 @@ class CustomerCrudTest extends TestCase
 
     public function test_can_update_a_customer(): void
     {
-        $customer = Customer::factory()->create();
+        $customer = Customer::factory()->create(['company_id' => $this->company->id]);
         $newCustomerData = Customer::factory()->make();
 
         Livewire::test(EditCustomer::class, [
@@ -127,7 +134,7 @@ class CustomerCrudTest extends TestCase
 
     public function test_can_delete_a_customer(): void
     {
-        $customer = Customer::factory()->create();
+        $customer = Customer::factory()->create(['company_id' => $this->company->id]);
 
         Livewire::test(EditCustomer::class, [
             'record' => $customer->id,
@@ -143,7 +150,7 @@ class CustomerCrudTest extends TestCase
 
     public function test_can_search_customers_by_name(): void
     {
-        $customers = Customer::factory()->count(5)->create();
+        $customers = Customer::factory()->count(5)->create(['company_id' => $this->company->id]);
         $targetCustomer = $customers->first();
 
         Livewire::test(ListCustomers::class)
@@ -154,7 +161,7 @@ class CustomerCrudTest extends TestCase
 
     public function test_can_search_customers_by_email(): void
     {
-        $customers = Customer::factory()->count(5)->create();
+        $customers = Customer::factory()->count(5)->create(['company_id' => $this->company->id]);
         $targetCustomer = $customers->last();
 
         Livewire::test(ListCustomers::class)
@@ -165,8 +172,14 @@ class CustomerCrudTest extends TestCase
 
     public function test_can_filter_customers_by_status(): void
     {
-        Customer::factory()->count(5)->create(['status' => 'active']);
-        $inactiveCustomers = Customer::factory()->count(3)->create(['status' => 'inactive']);
+        Customer::factory()->count(5)->create([
+            'company_id' => $this->company->id,
+            'status' => 'active',
+        ]);
+        $inactiveCustomers = Customer::factory()->count(3)->create([
+            'company_id' => $this->company->id,
+            'status' => 'inactive',
+        ]);
 
         Livewire::test(ListCustomers::class)
             ->filterTable('status', 'inactive')
@@ -214,6 +227,7 @@ class CustomerCrudTest extends TestCase
     public function test_can_edit_customer_and_add_property_from_billing_address(): void
     {
         $customer = Customer::factory()->create([
+            'company_id' => $this->company->id,
             'billing_address' => '456 Edit Street',
             'billing_city' => 'EditCity',
             'billing_state' => 'NY',
@@ -245,6 +259,7 @@ class CustomerCrudTest extends TestCase
     public function test_does_not_create_duplicate_property_from_billing_address(): void
     {
         $customer = Customer::factory()->create([
+            'company_id' => $this->company->id,
             'billing_address' => '789 Duplicate St',
             'billing_city' => 'DupeCity',
             'billing_state' => 'TX',
@@ -253,6 +268,7 @@ class CustomerCrudTest extends TestCase
 
         // Create initial property with same address
         Property::factory()->create([
+            'company_id' => $this->company->id,
             'customer_id' => $customer->id,
             'address' => '789 Duplicate St',
             'city' => 'DupeCity',

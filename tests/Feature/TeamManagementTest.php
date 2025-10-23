@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Filament\Resources\Teams\Pages\CreateTeam;
 use App\Filament\Resources\Teams\Pages\EditTeam;
 use App\Filament\Resources\Teams\Pages\ListTeams;
+use App\Models\Company;
 use App\Models\ServiceAppointment;
 use App\Models\Team;
 use App\Models\User;
@@ -18,17 +19,23 @@ class TeamManagementTest extends TestCase
 
     protected User $user;
 
+    protected Company $company;
+
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->user = User::factory()->create();
+        $this->company = Company::factory()->create();
+        $this->user = User::factory()->create(['company_id' => $this->company->id]);
         $this->actingAs($this->user);
     }
 
     public function test_can_list_teams(): void
     {
-        $teams = Team::factory()->count(3)->create(['is_active' => true]);
+        $teams = Team::factory()->count(3)->create([
+            'company_id' => $this->company->id,
+            'is_active' => true,
+        ]);
 
         Livewire::test(ListTeams::class)
             ->filterTable('active', true)
@@ -62,6 +69,7 @@ class TeamManagementTest extends TestCase
     public function test_can_edit_team(): void
     {
         $team = Team::factory()->create([
+            'company_id' => $this->company->id,
             'name' => 'Original Name',
         ]);
 
@@ -83,8 +91,8 @@ class TeamManagementTest extends TestCase
 
     public function test_can_assign_users_to_team(): void
     {
-        $team = Team::factory()->create();
-        $users = User::factory()->count(3)->create();
+        $team = Team::factory()->create(['company_id' => $this->company->id]);
+        $users = User::factory()->count(3)->create(['company_id' => $this->company->id]);
 
         Livewire::test(EditTeam::class, ['record' => $team->getRouteKey()])
             ->fillForm([
@@ -98,7 +106,7 @@ class TeamManagementTest extends TestCase
 
     public function test_can_delete_team(): void
     {
-        $team = Team::factory()->create();
+        $team = Team::factory()->create(['company_id' => $this->company->id]);
 
         $team->delete();
 
@@ -109,8 +117,14 @@ class TeamManagementTest extends TestCase
 
     public function test_active_scope_filters_active_teams(): void
     {
-        Team::factory()->create(['is_active' => true]);
-        Team::factory()->create(['is_active' => false]);
+        Team::factory()->create([
+            'company_id' => $this->company->id,
+            'is_active' => true,
+        ]);
+        Team::factory()->create([
+            'company_id' => $this->company->id,
+            'is_active' => false,
+        ]);
 
         $activeTeams = Team::active()->get();
 
@@ -119,16 +133,19 @@ class TeamManagementTest extends TestCase
 
     public function test_team_has_appointments_relationship(): void
     {
-        $team = Team::factory()->create();
-        $appointment = ServiceAppointment::factory()->create(['team_id' => $team->id]);
+        $team = Team::factory()->create(['company_id' => $this->company->id]);
+        $appointment = ServiceAppointment::factory()->create([
+            'company_id' => $this->company->id,
+            'team_id' => $team->id,
+        ]);
 
         $this->assertTrue($team->appointments->contains($appointment));
     }
 
     public function test_team_has_users_relationship(): void
     {
-        $team = Team::factory()->create();
-        $user = User::factory()->create();
+        $team = Team::factory()->create(['company_id' => $this->company->id]);
+        $user = User::factory()->create(['company_id' => $this->company->id]);
 
         $team->users()->attach($user->id);
 
@@ -148,8 +165,14 @@ class TeamManagementTest extends TestCase
 
     public function test_can_filter_teams_by_active_status(): void
     {
-        $activeTeam = Team::factory()->create(['is_active' => true]);
-        $inactiveTeam = Team::factory()->create(['is_active' => false]);
+        $activeTeam = Team::factory()->create([
+            'company_id' => $this->company->id,
+            'is_active' => true,
+        ]);
+        $inactiveTeam = Team::factory()->create([
+            'company_id' => $this->company->id,
+            'is_active' => false,
+        ]);
 
         Livewire::test(ListTeams::class)
             ->filterTable('active', true)

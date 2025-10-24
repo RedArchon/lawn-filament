@@ -14,9 +14,7 @@ class SendInvoiceEmailJob implements ShouldQueue
 
     public function __construct(
         public Invoice $invoice
-    ) {
-        //
-    }
+    ) {}
 
     public function handle(): void
     {

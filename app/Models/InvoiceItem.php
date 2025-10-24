@@ -37,30 +37,34 @@ class InvoiceItem extends Model
 
         static::saved(function (InvoiceItem $item) {
             // Recalculate parent invoice totals
-            $item->invoice->load('items');
-            $subtotal = $item->invoice->items->sum('line_total');
-            $taxAmount = $subtotal * ($item->invoice->tax_rate / 100);
-            $total = $subtotal + $taxAmount;
+            if ($item->invoice) {
+                $item->invoice->load('items');
+                $subtotal = $item->invoice->items->sum('line_total');
+                $taxAmount = $subtotal * ($item->invoice->tax_rate / 100);
+                $total = $subtotal + $taxAmount;
 
-            $item->invoice->update([
-                'subtotal' => $subtotal,
-                'tax_amount' => $taxAmount,
-                'total' => $total,
-            ]);
+                $item->invoice->update([
+                    'subtotal' => $subtotal,
+                    'tax_amount' => $taxAmount,
+                    'total' => $total,
+                ]);
+            }
         });
 
         static::deleted(function (InvoiceItem $item) {
             // Recalculate parent invoice totals after deletion
-            $item->invoice->load('items');
-            $subtotal = $item->invoice->items->sum('line_total');
-            $taxAmount = $subtotal * ($item->invoice->tax_rate / 100);
-            $total = $subtotal + $taxAmount;
+            if ($item->invoice) {
+                $item->invoice->load('items');
+                $subtotal = $item->invoice->items->sum('line_total');
+                $taxAmount = $subtotal * ($item->invoice->tax_rate / 100);
+                $total = $subtotal + $taxAmount;
 
-            $item->invoice->update([
-                'subtotal' => $subtotal,
-                'tax_amount' => $taxAmount,
-                'total' => $total,
-            ]);
+                $item->invoice->update([
+                    'subtotal' => $subtotal,
+                    'tax_amount' => $taxAmount,
+                    'total' => $total,
+                ]);
+            }
         });
     }
 

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Invoices\Tables;
 
-use App\Services\InvoicePdfService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -92,8 +91,9 @@ class InvoicesTable
                 Action::make('download_pdf')
                     ->label('Download PDF')
                     ->icon('heroicon-o-arrow-down-tray')
-                    ->url(fn ($record) => route('invoices.pdf', $record))
-                    ->openUrlInNewTab(),
+                    ->url(fn ($record) => $record->getPdfDownloadUrl())
+                    ->openUrlInNewTab()
+                    ->visible(fn ($record) => $record->hasPdf()),
                 Action::make('mark_paid')
                     ->label('Mark Paid')
                     ->icon('heroicon-o-check-circle')

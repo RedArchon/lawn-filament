@@ -18,7 +18,7 @@ class InvoicePdfService
         ])->setPaper('a4');
     }
 
-    public function download(Invoice $invoice): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    public function download(Invoice $invoice): \Illuminate\Http\Response
     {
         $pdf = $this->generate($invoice);
         $filename = "Invoice-{$invoice->invoice_number}.pdf";

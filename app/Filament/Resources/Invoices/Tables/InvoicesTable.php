@@ -3,14 +3,14 @@
 namespace App\Filament\Resources\Invoices\Tables;
 
 use App\Services\InvoicePdfService;
+use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
-use Filament\Actions\Action;
-use Filament\Actions\BulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
@@ -92,9 +92,8 @@ class InvoicesTable
                 Action::make('download_pdf')
                     ->label('Download PDF')
                     ->icon('heroicon-o-arrow-down-tray')
-                    ->action(function ($record) {
-                        return app(InvoicePdfService::class)->download($record);
-                    }),
+                    ->url(fn ($record) => route('invoices.pdf', $record))
+                    ->openUrlInNewTab(),
                 Action::make('mark_paid')
                     ->label('Mark Paid')
                     ->icon('heroicon-o-check-circle')

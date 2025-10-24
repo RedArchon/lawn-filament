@@ -4,13 +4,12 @@ namespace App\Filament\Resources\Invoices\Schemas;
 
 use App\Models\ServiceAppointment;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
-use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class InvoiceForm
@@ -76,9 +75,11 @@ class InvoiceForm
                     ->schema([
                         Grid::make(3)
                             ->schema([
-                                Placeholder::make('subtotal')
+                                TextInput::make('subtotal')
                                     ->label('Subtotal')
-                                    ->content(function (callable $get) {
+                                    ->disabled()
+                                    ->dehydrated(false)
+                                    ->formatStateUsing(function (callable $get) {
                                         $items = $get('items') ?? [];
                                         $subtotal = 0;
                                         foreach ($items as $item) {
@@ -89,9 +90,11 @@ class InvoiceForm
 
                                         return '$'.number_format($subtotal, 2);
                                     }),
-                                Placeholder::make('tax_amount')
+                                TextInput::make('tax_amount')
                                     ->label('Tax Amount')
-                                    ->content(function (callable $get) {
+                                    ->disabled()
+                                    ->dehydrated(false)
+                                    ->formatStateUsing(function (callable $get) {
                                         $items = $get('items') ?? [];
                                         $subtotal = 0;
                                         foreach ($items as $item) {
@@ -104,9 +107,11 @@ class InvoiceForm
 
                                         return '$'.number_format($taxAmount, 2);
                                     }),
-                                Placeholder::make('total')
+                                TextInput::make('total')
                                     ->label('Total')
-                                    ->content(function (callable $get) {
+                                    ->disabled()
+                                    ->dehydrated(false)
+                                    ->formatStateUsing(function (callable $get) {
                                         $items = $get('items') ?? [];
                                         $subtotal = 0;
                                         foreach ($items as $item) {
@@ -139,15 +144,18 @@ class InvoiceForm
                                                 titleAttribute: 'id',
                                                 modifyQueryUsing: function ($query, $get) {
                                                     $customerId = $get('../../customer_id');
+
+                                                    // Company scope is automatically applied by BelongsToCompany trait
+                                                    $query = $query->uninvoiced()->with(['serviceType', 'property']);
+
+                                                    // If customer is selected, filter by customer's properties
                                                     if ($customerId) {
-                                                        return $query->whereHas('property', function ($q) use ($customerId) {
+                                                        $query->whereHas('property', function ($q) use ($customerId) {
                                                             $q->where('customer_id', $customerId);
-                                                        })->uninvoiced()
-                                                        ->with(['serviceType', 'property']);
+                                                        });
                                                     }
 
-                                                    return $query->uninvoiced()
-                                                        ->with(['serviceType', 'property']);
+                                                    return $query;
                                                 }
                                             )
                                             ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->serviceType->name} - {$record->property->full_address}")
@@ -180,9 +188,11 @@ class InvoiceForm
                                             ->required()
                                             ->reactive()
                                             ->columnSpan(1),
-                                        Placeholder::make('line_total')
+                                        TextInput::make('line_total')
                                             ->label('Line Total')
-                                            ->content(function (callable $get) {
+                                            ->disabled()
+                                            ->dehydrated(false)
+                                            ->formatStateUsing(function (callable $get) {
                                                 $quantity = (float) $get('quantity') ?: 0;
                                                 $unitPrice = (float) $get('unit_price') ?: 0;
 
@@ -196,7 +206,6 @@ class InvoiceForm
                             ->itemLabel(fn (array $state): ?string => $state['description'] ?? null),
                     ])
                     ->columnSpanFull(),
-
             ]);
     }
 }

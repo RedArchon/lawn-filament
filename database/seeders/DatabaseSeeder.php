@@ -271,7 +271,7 @@ class DatabaseSeeder extends Seeder
             ->get();
 
         if ($completedAppointments->count() > 0) {
-            $appointmentGroups = $completedAppointments->groupBy('property.customer_id');
+            $appointmentGroups = $completedAppointments->groupBy(fn($appointment) => $appointment->property->customer_id);
 
             foreach ($appointmentGroups as $customerId => $appointments) {
                 if ($appointments->count() > 0) {

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ServiceAppointment extends Model implements BelongsToCompanyContract
@@ -29,6 +30,7 @@ class ServiceAppointment extends Model implements BelongsToCompanyContract
         'completed_by',
         'duration_minutes',
         'notes',
+        'invoiced_at',
     ];
 
     protected function casts(): array
@@ -38,6 +40,7 @@ class ServiceAppointment extends Model implements BelongsToCompanyContract
             'scheduled_date' => 'date',
             'scheduled_time' => 'datetime',
             'completed_at' => 'datetime',
+            'invoiced_at' => 'datetime',
         ];
     }
 
@@ -64,6 +67,11 @@ class ServiceAppointment extends Model implements BelongsToCompanyContract
     public function team(): BelongsTo
     {
         return $this->belongsTo(Team::class);
+    }
+
+    public function invoiceItems(): HasMany
+    {
+        return $this->hasMany(InvoiceItem::class);
     }
 
     public function scopeScheduled(Builder $query): void
@@ -94,6 +102,16 @@ class ServiceAppointment extends Model implements BelongsToCompanyContract
     public function scopeUnassigned(Builder $query): void
     {
         $query->whereNull('team_id');
+    }
+
+    public function scopeUninvoiced(Builder $query): void
+    {
+        $query->whereNull('invoiced_at');
+    }
+
+    public function scopeInvoiced(Builder $query): void
+    {
+        $query->whereNotNull('invoiced_at');
     }
 
     public function markCompleted(User $user): void

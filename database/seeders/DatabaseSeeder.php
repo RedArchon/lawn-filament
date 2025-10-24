@@ -234,5 +234,57 @@ class DatabaseSeeder extends Seeder
                 $i++;
             }
         }
+
+        // Create sample invoices for primary company
+        $invoiceCount = fake()->numberBetween(15, 25);
+        $invoices = collect();
+
+        foreach (range(1, $invoiceCount) as $i) {
+            $customer = $customers->random();
+            $status = fake()->randomElement(['draft', 'sent', 'paid', 'overdue', 'cancelled']);
+
+            $invoice = \App\Models\Invoice::factory()->create([
+                'company_id' => $primaryCompany->id,
+                'customer_id' => $customer->id,
+                'status' => $status,
+            ]);
+
+            // Create 1-4 line items for each invoice
+            $itemCount = fake()->numberBetween(1, 4);
+            for ($j = 0; $j < $itemCount; $j++) {
+                \App\Models\InvoiceItem::factory()->create([
+                    'invoice_id' => $invoice->id,
+                    'service_appointment_id' => null, // Manual line items for now
+                ]);
+            }
+
+            // Recalculate totals
+            app(\App\Services\InvoiceService::class)->calculateTotals($invoice);
+            $invoices->push($invoice);
+        }
+
+        // Create some invoices from completed service appointments
+        $completedAppointments = \App\Models\ServiceAppointment::where('company_id', $primaryCompany->id)
+            ->where('status', 'completed')
+            ->whereNull('invoiced_at')
+            ->take(10)
+            ->get();
+
+        if ($completedAppointments->count() > 0) {
+            $appointmentGroups = $completedAppointments->groupBy(fn($appointment) => $appointment->property->customer_id);
+
+            foreach ($appointmentGroups as $customerId => $appointments) {
+                if ($appointments->count() > 0) {
+                    $customer = \App\Models\Customer::find($customerId);
+                    $appointmentIds = $appointments->take(fake()->numberBetween(1, 3))->pluck('id')->toArray();
+
+                    app(\App\Services\InvoiceService::class)->createFromAppointments(
+                        $primaryCompany,
+                        $customer,
+                        $appointmentIds
+                    );
+                }
+            }
+        }
     }
 }

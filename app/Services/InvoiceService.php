@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\SendInvoiceEmailJob;
 use App\Models\Company;
 use App\Models\Customer;
 use App\Models\Invoice;
@@ -72,10 +73,14 @@ class InvoiceService
 
     public function send(Invoice $invoice): void
     {
+        // Update invoice status
         $invoice->update([
             'status' => 'sent',
             'sent_at' => now(),
         ]);
+
+        // Dispatch email job to queue
+        SendInvoiceEmailJob::dispatch($invoice);
     }
 
     public function cancel(Invoice $invoice, ?string $reason = null): void

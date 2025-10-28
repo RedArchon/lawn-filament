@@ -19,6 +19,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        \App\Models\Property::observe(\App\Observers\PropertyObserver::class);
+        // Only register the PropertyObserver when not running in console (including seeding and unit tests)
+        if (!app()->runningInConsole()) {
+            \App\Models\Property::observe(\App\Observers\PropertyObserver::class);
+        }
     }
 }

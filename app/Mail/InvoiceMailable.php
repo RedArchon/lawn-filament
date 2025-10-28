@@ -9,6 +9,7 @@ use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class InvoiceMailable extends Mailable
@@ -63,7 +64,13 @@ class InvoiceMailable extends Mailable
                         ['mime' => 'application/pdf']
                     );
                 } catch (\Exception $e) {
-                    // PDF not available, continue without attachment
+                    // PDF not available in any storage, log the error
+                    Log::error('Invoice PDF not available in any storage', [
+                        'invoice_id' => $this->invoice->id,
+                        'invoice_number' => $this->invoice->invoice_number,
+                        'pdf_path' => $this->invoice->pdf_path,
+                        'error' => $e->getMessage(),
+                    ]);
                 }
             }
         }

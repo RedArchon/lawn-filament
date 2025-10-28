@@ -50,7 +50,7 @@ class DatabaseSeeder extends Seeder
             foreach (range(1, $propertyCount) as $i) {
                 $selectedAddress = fake()->randomElement($realAddresses);
 
-                $property = \App\Models\Property::create([
+                $property = \App\Models\Property::factory()->create([
                     'company_id' => $primaryCompany->id,
                     'customer_id' => $customers->random()->id,
                     'address' => $selectedAddress['address'],
@@ -62,9 +62,6 @@ class DatabaseSeeder extends Seeder
                     'geocoded_at' => now()->subDays(fake()->numberBetween(1, 30)),
                     'geocoding_failed' => false,
                     'geocoding_error' => null,
-                    'lot_size' => fake()->randomElement(['0.25 acres', '0.5 acres', '1 acre', '2 acres', null]),
-                    'access_instructions' => fake()->boolean(30) ? fake()->sentence() : null,
-                    'service_status' => fake()->randomElement(['active', 'inactive', 'seasonal']),
                 ]);
                 $properties->push($property);
             }
